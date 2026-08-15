@@ -1,0 +1,70 @@
+{
+	"entity.gorilla.ambient": {
+		"sounds": [{"name": "minecraft:entity.panda.ambient", "type": "event", "pitch": 0.55, "volume": 1.2}],
+		"subtitle": "subtitles.menagerie.gorilla_ambient"
+	},
+	"entity.gorilla.hurt": {
+		"sounds": [{"name": "minecraft:entity.panda.hurt", "type": "event", "pitch": 0.6, "volume": 1.2}],
+		"subtitle": "subtitles.menagerie.gorilla_hurt"
+	},
+	"entity.gorilla.death": {
+		"sounds": [{"name": "minecraft:entity.panda.death", "type": "event", "pitch": 0.55, "volume": 1.2}],
+		"subtitle": "subtitles.menagerie.gorilla_death"
+	},
+	"entity.gorilla.chest_beat": {
+		"sounds": [{"name": "minecraft:entity.ravager.roar", "type": "event", "pitch": 1.35, "volume": 1.4}],
+		"subtitle": "subtitles.menagerie.gorilla_chest_beat"
+	},
+	"entity.gorilla.eat": {
+		"sounds": [{"name": "minecraft:entity.panda.eat", "type": "event", "pitch": 0.8}],
+		"subtitle": "subtitles.menagerie.gorilla_eat"
+	},
+	"entity.crocodile.ambient": {
+		"sounds": [{"name": "minecraft:entity.ravager.ambient", "type": "event", "pitch": 0.6, "volume": 0.5}],
+		"subtitle": "subtitles.menagerie.crocodile_ambient"
+	},
+	"entity.crocodile.hurt": {
+		"sounds": [{"name": "minecraft:entity.turtle.hurt", "type": "event", "pitch": 0.55, "volume": 1.2}],
+		"subtitle": "subtitles.menagerie.crocodile_hurt"
+	},
+	"entity.crocodile.death": {
+		"sounds": [{"name": "minecraft:entity.turtle.death", "type": "event", "pitch": 0.5, "volume": 1.2}],
+		"subtitle": "subtitles.menagerie.crocodile_death"
+	},
+	"entity.crocodile.snap": {
+		"sounds": [{"name": "minecraft:entity.ravager.attack", "type": "event", "pitch": 0.7, "volume": 1.3}],
+		"subtitle": "subtitles.menagerie.crocodile_snap"
+	},
+	"entity.tortoise.ambient": {
+		"sounds": [{"name": "minecraft:entity.turtle.ambient_land", "type": "event", "pitch": 0.85}],
+		"subtitle": "subtitles.menagerie.tortoise_ambient"
+	},
+	"entity.tortoise.hurt": {
+		"sounds": [{"name": "minecraft:entity.turtle.hurt", "type": "event", "pitch": 0.85}],
+		"subtitle": "subtitles.menagerie.tortoise_hurt"
+	},
+	"entity.tortoise.death": {
+		"sounds": [{"name": "minecraft:entity.turtle.death", "type": "event", "pitch": 0.85}],
+		"subtitle": "subtitles.menagerie.tortoise_death"
+	},
+	"entity.tortoise.retract": {
+		"sounds": [{"name": "minecraft:entity.turtle.shamble", "type": "event", "pitch": 0.7, "volume": 1.1}],
+		"subtitle": "subtitles.menagerie.tortoise_retract"
+	},
+	"entity.leopard.ambient": {
+		"sounds": [{"name": "minecraft:entity.ocelot.ambient", "type": "event", "pitch": 0.6, "volume": 1.1}],
+		"subtitle": "subtitles.menagerie.leopard_ambient"
+	},
+	"entity.leopard.hurt": {
+		"sounds": [{"name": "minecraft:entity.ocelot.hurt", "type": "event", "pitch": 0.6, "volume": 1.1}],
+		"subtitle": "subtitles.menagerie.leopard_hurt"
+	},
+	"entity.leopard.death": {
+		"sounds": [{"name": "minecraft:entity.ocelot.death", "type": "event", "pitch": 0.55, "volume": 1.1}],
+		"subtitle": "subtitles.menagerie.leopard_death"
+	},
+	"entity.leopard.pounce": {
+		"sounds": [{"name": "minecraft:entity.polar_bear.warning", "type": "event", "pitch": 1.3, "volume": 0.9}],
+		"subtitle": "subtitles.menagerie.leopard_pounce"
+	}
+}

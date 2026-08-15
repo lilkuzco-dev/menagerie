@@ -1,0 +1,23 @@
+{
+	"_tuning_notes": "Mountain gorilla: windswept hills + grove, thicker fur texture, +4 health over lowland, slightly smaller troops. Proves biome-tag species routing from the same entity class.",
+	"entity": "menagerie:gorilla",
+	"species": "mountain",
+	"biomes": ["#minecraft:is_hill", "minecraft:grove"],
+	"weight": 6,
+	"group_size": [3, 5],
+	"worldgen_only": false,
+	"health": 34,
+	"attack": 6,
+	"speed": 0.3,
+	"tame_item": "minecraft:melon_slice",
+	"neutral": true,
+	"texture": "menagerie:textures/entity/gorilla/mountain.png",
+	"special": {
+		"chest_beat_cooldown_min": 600,
+		"chest_beat_cooldown_max": 1800,
+		"chest_beat_detect_radius": 8.0,
+		"intimidate_radius": 6.0,
+		"intimidate_slowness_ticks": 100,
+		"foliage_tearing": true
+	}
+}

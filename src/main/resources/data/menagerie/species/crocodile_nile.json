@@ -1,0 +1,18 @@
+{
+	"_tuning_notes": "Nile crocodile in swamps. Neutral on land, ambush predator in water: lunge_range is the scan radius in blocks, grab_ticks the drag duration (40 = 2s with two chews at half attack each). Not tamable, not breedable (no items set).",
+	"entity": "menagerie:crocodile",
+	"species": "nile",
+	"biomes": ["minecraft:swamp"],
+	"weight": 6,
+	"group_size": [1, 2],
+	"worldgen_only": false,
+	"health": 26,
+	"attack": 7,
+	"speed": 0.26,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/crocodile/nile.png",
+	"special": {
+		"lunge_range": 3.0,
+		"grab_ticks": 40
+	}
+}

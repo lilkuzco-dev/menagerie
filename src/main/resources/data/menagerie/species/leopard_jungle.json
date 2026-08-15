@@ -1,0 +1,15 @@
+{
+	"_tuning_notes": "Jungle leopard. Stalker: crouch-approach, pounce with leap. Prey = chickens, rabbits, baby animals; players only when below half health (opportunist, hardcoded); flees when 2+ players within 8 blocks.",
+	"entity": "menagerie:leopard",
+	"species": "leopard",
+	"biomes": ["#minecraft:is_jungle"],
+	"weight": 5,
+	"group_size": [1, 2],
+	"worldgen_only": false,
+	"health": 22,
+	"attack": 5,
+	"speed": 0.33,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/leopard/leopard.png",
+	"special": {}
+}

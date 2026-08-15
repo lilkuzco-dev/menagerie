@@ -1,0 +1,19 @@
+{
+	"_tuning_notes": "Saltwater crocodile in mangroves: bigger (scale 1.2), tougher, hits harder, slightly longer grab. Same entity class as nile — the registry proves itself.",
+	"entity": "menagerie:crocodile",
+	"species": "saltwater",
+	"biomes": ["minecraft:mangrove_swamp"],
+	"weight": 6,
+	"group_size": [1, 2],
+	"worldgen_only": false,
+	"health": 34,
+	"attack": 9,
+	"speed": 0.26,
+	"scale": 1.2,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/crocodile/saltwater.png",
+	"special": {
+		"lunge_range": 3.5,
+		"grab_ticks": 50
+	}
+}

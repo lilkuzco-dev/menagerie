@@ -1,0 +1,24 @@
+{
+	"entity.menagerie.gorilla": "Gorilla",
+	"entity.menagerie.crocodile": "Crocodile",
+	"entity.menagerie.tortoise": "Tortoise",
+	"entity.menagerie.leopard": "Leopard",
+
+	"subtitles.menagerie.gorilla_ambient": "Gorilla grunts",
+	"subtitles.menagerie.gorilla_hurt": "Gorilla hurts",
+	"subtitles.menagerie.gorilla_death": "Gorilla dies",
+	"subtitles.menagerie.gorilla_chest_beat": "Silverback beats chest",
+	"subtitles.menagerie.gorilla_eat": "Gorilla eats",
+	"subtitles.menagerie.crocodile_ambient": "Crocodile hisses",
+	"subtitles.menagerie.crocodile_hurt": "Crocodile hurts",
+	"subtitles.menagerie.crocodile_death": "Crocodile dies",
+	"subtitles.menagerie.crocodile_snap": "Crocodile snaps",
+	"subtitles.menagerie.tortoise_ambient": "Tortoise chuffs",
+	"subtitles.menagerie.tortoise_hurt": "Tortoise hurts",
+	"subtitles.menagerie.tortoise_death": "Tortoise dies",
+	"subtitles.menagerie.tortoise_retract": "Tortoise retreats into shell",
+	"subtitles.menagerie.leopard_ambient": "Leopard growls",
+	"subtitles.menagerie.leopard_hurt": "Leopard hurts",
+	"subtitles.menagerie.leopard_death": "Leopard dies",
+	"subtitles.menagerie.leopard_pounce": "Leopard pounces"
+}

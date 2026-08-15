@@ -1,0 +1,19 @@
+{
+	"_tuning_notes": "Savanna/badlands tortoise. worldgen_only true = Untamed Wilds style: spawns with newly generated chunks only, never naturally respawns — killing them permanently empties the area, and they drop nothing. shell_armor/shell_ticks tune the retreat (+8 armor, immobile, 10s). Breeds with sweet berries (breed_item), never tames.",
+	"entity": "menagerie:tortoise",
+	"species": "savanna",
+	"biomes": ["#minecraft:is_savanna", "#minecraft:is_badlands"],
+	"weight": 8,
+	"group_size": [1, 3],
+	"worldgen_only": true,
+	"health": 20,
+	"attack": 0,
+	"speed": 0.18,
+	"breed_item": "minecraft:sweet_berries",
+	"neutral": true,
+	"texture": "menagerie:textures/entity/tortoise/savanna.png",
+	"special": {
+		"shell_armor": 8.0,
+		"shell_ticks": 200
+	}
+}
