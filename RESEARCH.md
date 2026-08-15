@@ -78,3 +78,33 @@ Species JSONs are read twice: once from the classpath at mod init (to register
 BiomeModifications spawn entries before biome bake), and continuously via the reload
 listener (live behavior: stats, tame item, special abilities, spawn gating). This is
 deliberate — Fabric bakes biome spawn lists once per server run.
+
+---
+
+## Phase 2 appendix (2026-08-15)
+
+### License additions
+
+| Repo | License (as found) | What we may take |
+|------|--------------------|------------------|
+| `starfish-studios/Naturalist` | **Split license, verified in LICENSE:** `/common/src/main/resources/`, `/fabric/src/main/resources/`, `/forge/src/main/resources/` (and everything under them) are **All Rights Reserved**; *all other files* — i.e. the Java code — are **MIT**. (The current single-loader branch keeps the same carve-out shape with `src/main/resources/`.) | Bear (fishing/sleep/cub-defense) and snake (coiled ambush/rattle) **code** usable under MIT with attribution; every asset directory is off-limits. We studied `Bear.java`/`Snake.java` for structure (sleep gating windows, goal ordering, rattle range checks) and wrote our own 26.2 implementations — nothing copied verbatim, since its 1.21.1 GeckoLib-based code doesn't port to our vanilla-model 26.2 codebase anyway. |
+| `AlexModGuy/AlexsMobs` | unchanged from Phase 1: **no license file, all rights reserved** | Concepts only, again: hippo-class hitbox feel, vulture/eagle circling idea, rattlesnake telegraph-then-strike pacing. No code was even fetched this phase. |
+
+### Patterns adopted in Phase 2
+
+- **Vanilla `Phantom`** (mapped sources, ours to read): custom `MoveControl` steering
+  toward a `moveTargetPoint` with velocity blending + `CircleAroundAnchorGoal`
+  selecting orbit points; `travel() -> travelFlying(input, 0.2F)`. The vulture is a
+  simplified port of this exact structure with a landed/flying state switch.
+- **Vanilla `PolarBear`**: mother-aggro shape (baby-gated target goal + hurt-alert);
+  our grizzly adds the Naturalist-style explicit "player crowds a cub" check.
+- **Naturalist `Bear` (MIT)**: sleep scheduling gated on day-time windows + anger +
+  not-in-water; goal priority layout for stacking fishing/sleeping/raiding on one mob.
+- **Naturalist `Snake` (MIT)**: rattle-warning driven off a range check rather than a
+  timer, so careful players never trigger the strike.
+- **Vanilla `VehicleEntity`**: boat damage accumulates `damage * 10` and breaks past
+  40 — the hippo bites for +25/bite and takes over the breakup to drop planks+sticks
+  (spec) instead of the vanilla boat item.
+- **In-house `GrabHold` extraction**: the Phase 1 crocodile grab was refactored into
+  a shared class now also driving the python constrict — one code path, regression-
+  tested on both.

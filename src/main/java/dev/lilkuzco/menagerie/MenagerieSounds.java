@@ -31,6 +31,29 @@ public final class MenagerieSounds {
 	public static final SoundEvent LEOPARD_DEATH = register("entity.leopard.death");
 	public static final SoundEvent LEOPARD_POUNCE = register("entity.leopard.pounce");
 
+	public static final SoundEvent HIPPO_AMBIENT = register("entity.hippo.ambient");
+	public static final SoundEvent HIPPO_HURT = register("entity.hippo.hurt");
+	public static final SoundEvent HIPPO_DEATH = register("entity.hippo.death");
+	public static final SoundEvent HIPPO_WARN = register("entity.hippo.warn");
+	public static final SoundEvent HIPPO_ATTACK = register("entity.hippo.attack");
+
+	public static final SoundEvent GRIZZLY_AMBIENT = register("entity.grizzly.ambient");
+	public static final SoundEvent GRIZZLY_HURT = register("entity.grizzly.hurt");
+	public static final SoundEvent GRIZZLY_DEATH = register("entity.grizzly.death");
+	public static final SoundEvent GRIZZLY_SWIPE = register("entity.grizzly.swipe");
+	public static final SoundEvent GRIZZLY_EAT = register("entity.grizzly.eat");
+
+	public static final SoundEvent VULTURE_AMBIENT = register("entity.vulture.ambient");
+	public static final SoundEvent VULTURE_HURT = register("entity.vulture.hurt");
+	public static final SoundEvent VULTURE_DEATH = register("entity.vulture.death");
+	public static final SoundEvent VULTURE_SWOOP = register("entity.vulture.swoop");
+	public static final SoundEvent VULTURE_EAT = register("entity.vulture.eat");
+
+	public static final SoundEvent SNAKE_RATTLE = register("entity.snake.rattle");
+	public static final SoundEvent SNAKE_STRIKE = register("entity.snake.strike");
+	public static final SoundEvent SNAKE_HURT = register("entity.snake.hurt");
+	public static final SoundEvent SNAKE_DEATH = register("entity.snake.death");
+
 	private static SoundEvent register(String name) {
 		Identifier id = Menagerie.id(name);
 		return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));

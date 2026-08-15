@@ -31,3 +31,30 @@ Debug tooling built for this battery: `/menagerie census [r]` (per-species count
   chunk-level quirk) — mid-battery red herring, worth remembering for future batteries.
 - A lone summoned gorilla becomes silverback of its own new troop; separately summoned
   gorillas coalesce into nearby troops within ~2s and any duplicate silverbacks dedup.
+
+---
+
+# Menagerie 0.2.0 — Phase 2 Battery
+
+Date: 2026-08-15. Same rig: dev dedicated server (port 25567 this time — a parallel
+Warfront dev server held 25565), carpet fake player, RCON, client gametest for render
+checks. Census gained `|sleeping`, `|flying`, `|rattling` markers.
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | All four new mobs render in-camera | **PASS** — client gametest screenshot (`docs/lineup_phase2.png`): hippo (mauve hide, pale belly), grizzly (dark coat, muzzle, ears), vulture (dark feathers, bald pink head/neck, folded wings on the ground), coiled green snake. Phase 1 row re-shot too (`docs/lineup.png`). |
+| 2 | Hippo territory | **PASS** — water-anchored claim (`menagerie_territory` snapped to the pool block). Survival player at 20 blocks: ignored for 6s+. At 7 blocks: yawn warning then `|angry` charge within 5s. Left the zone: stood down after ~25s. **Boat**: destroyed in 2 bites inside 10s, oak planks + sticks item entities at the wreck (custom break — vanilla would drop a boat item). |
+| 3 | Grizzly | **PASS** — cub-defense: adult calm with player 10 blocks from cub, `|angry` within 4 blocks of it (timid black bear correctly overrode its flee instinct). Fishing: salmon killed by paw-swipe and consumed within 20s of going hungry, no leftover items, no anger. Sleep: `|sleeping` at midnight (both bears), awake at noon. |
+| 4 | Vulture | **PASS** — natural spawns airborne in fresh savanna chunks (4 × `|flying`). Cow killed → vultures converged within 10s, circled ~10s, landed, **beef consumed at t=30s**. Full-health survival player ignored for 8s+; at ≤3 hearts a vulture pecked for exactly 1 (and the flock later finished the test player off — log: "Steve was slain by Vulture"). Two bugs found & fixed mid-battery: ambient despawn was culling them 32 blocks out (now only 96+), and the phantom-style steering repels from steep descent targets (landing now cuts the engine overhead + fall-damage immunity). |
+| 5 | Snake | **PASS** — python: no strike at 3.3 blocks (rattle `|rattling` only), strike inside 2 with Slowness III constrict via the shared GrabHold; repeated strikes eventually killed the unattended fake player ("Steve was slain by Snake"). Viper (badlands biome routing ✓, 8 HP from JSON): strike applied `minecraft:poison` amplifier 1 for 8s. **Crocodile grab regression through the same refactored GrabHold: exact Phase 1 damage fingerprint (40→26: 7 + 3.5 + 3.5)**. Bug found & fixed: the sprint-flee predicate was in the wrong AvoidEntityGoal ctor slot — snakes fled everyone, strikes unreachable. |
+| 6 | Registry reload | **PASS** — all 14 species load with Phase 1 files untouched (additive schema). Hippo territory radius 16→6 in the live datapack + `/reload`: same 8-block position flipped from aggro to ignored, 4-block position still aggroed; restored the same way. Zero rebuilds. |
+| 7 | Phase 1 regression | **PASS** — jungle troops intact (one silverback each, incl. self-promoted loner troops). Fresh gorilla tamed on the first pinned feed. The Phase-1 tame gorilla is parked in an unloaded chunk somewhere along the test route (it follow-teleports, and the fake player crossed ~4 km of test sites) — expected pet behavior, not a regression. |
+| 8 | Build & co-load | **PASS** — clean `./gradlew build`; every dev-server boot this battery co-loaded menagerie + vibranium 1.6.0 + warfront 0.1.0 with no mixin conflicts. |
+
+## Bugs found by this battery (all fixed before ship)
+- **Worldgen deadlock**: hippo territory claim ran inside `finalizeSpawn` (worldgen
+  thread) and its water scan read across chunk borders → server watchdog kill. Claims
+  now happen lazily on the first ticked frame. Vulture heightmap reads similarly
+  guarded with `hasChunkAt`.
+- Vulture ambient-despawn distance, vulture descent steering (both above).
+- Snake AvoidEntityGoal predicate slot (above).

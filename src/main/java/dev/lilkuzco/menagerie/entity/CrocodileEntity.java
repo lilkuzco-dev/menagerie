@@ -31,8 +31,8 @@ import org.jspecify.annotations.Nullable;
 public class CrocodileEntity extends SpeciesMob {
 	private static final byte EVENT_LUNGE = 66;
 
-	private @Nullable LivingEntity grabbed;
-	private int grabTicks;
+	private final dev.lilkuzco.menagerie.entity.ai.GrabHold grab =
+			new dev.lilkuzco.menagerie.entity.ai.GrabHold(this, 0.5);
 	private int lungeCooldown;
 
 	public int clientLungeTicks;
@@ -74,23 +74,9 @@ public class CrocodileEntity extends SpeciesMob {
 		}
 
 		// active grab: drag victim toward us, slow it, chew twice over the grab
-		if (grabTicks > 0) {
-			grabTicks--;
-			if (grabbed == null || !grabbed.isAlive() || distanceToSqr(grabbed) > 25.0) {
-				releaseGrab();
-			} else {
-				Vec3 pull = position().subtract(grabbed.position());
-				if (pull.lengthSqr() > 1.0) {
-					grabbed.setDeltaMovement(pull.normalize().scale(0.25));
-				}
-				grabbed.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 15, 2), this);
-				if (grabTicks == grabLength / 2 || grabTicks == 1) {
-					grabbed.hurtServer(level, damageSources().mobAttack(this),
-							(float) (getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) * 0.5));
-				}
-				if (grabTicks == 0) {
-					releaseGrab();
-				}
+		if (grab.active()) {
+			if (!grab.tick(level)) {
+				lungeCooldown = Math.max(lungeCooldown, 200);
 			}
 			return;
 		}
@@ -107,8 +93,7 @@ public class CrocodileEntity extends SpeciesMob {
 		if (dist < 2.6) {
 			// close enough: bite and start the grab
 			doHurtTarget(level, victim);
-			grabbed = victim;
-			grabTicks = grabLength;
+			grab.start(victim, grabLength);
 			lungeCooldown = 200;
 			level.broadcastEntityEvent(this, EVENT_LUNGE);
 			playSound(MenagerieSounds.CROCODILE_SNAP, 1.2F, 1.0F);
@@ -140,12 +125,6 @@ public class CrocodileEntity extends SpeciesMob {
 			}
 		}
 		return best;
-	}
-
-	private void releaseGrab() {
-		grabbed = null;
-		grabTicks = 0;
-		lungeCooldown = Math.max(lungeCooldown, 200);
 	}
 
 	@Override

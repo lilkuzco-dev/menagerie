@@ -18,4 +18,15 @@ public class MenagerieRenderState extends LivingEntityRenderState {
 	// leopard
 	public boolean crouching;
 	public float pounceTicks;
+	// hippo
+	public float yawnTicks;
+	// grizzly
+	public float swipeTicks;
+	public boolean bearSleeping;
+	// vulture
+	public boolean flying;
+	// snake
+	public boolean coiled;
+	public boolean rattling;
+	public float strikeTicks;
 }

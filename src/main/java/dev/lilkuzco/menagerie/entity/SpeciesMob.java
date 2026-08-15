@@ -94,6 +94,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 		getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(species.speed());
 		getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(species.attack());
 		getAttribute(Attributes.SCALE).setBaseValue(species.scale());
+		getAttribute(Attributes.ATTACK_KNOCKBACK).setBaseValue(species.knockback());
 	}
 
 	public Identifier texture() {

@@ -310,6 +310,79 @@ function paintLeopard(cv, P, rand, spotColor) {
 	paintBox(cv, 36, 21, 1, 1, 8, spotted(2.2));
 }
 
+// ---- hippo: body(0,0 14x12x16) head(0,28 10x6x10) ears(56,0 2x2x1)
+//             jaw(0,44 9x3x9) leg(40,28 4x5x4)
+function paintHippo(cv, P, mouthPink, rand) {
+	const hide = (baseIdx) => furShader(P, rand, baseIdx, 0.5); // smooth thick skin
+	paintBox(cv, 0, 0, 14, 12, 16, (face, x, y, fw, fh) =>
+		face === "bottom" || (face !== "top" && y > fh * 0.7)
+				? shade(P[3], 0.96 + rand() * 0.06) // pale underbelly
+				: hide(1.6)(face, x, y, fw, fh));
+	paintBox(cv, 0, 28, 10, 6, 10, hide(1.6));
+	// nostrils on the snout front
+	setPx(cv, 10 + 2, 34 + 1, P[0]); setPx(cv, 10 + 7, 34 + 1, P[0]);
+	// eyes high on the head top
+	setPx(cv, 10 + 1, 28 + 8, P[0]); setPx(cv, 10 + 8, 28 + 8, P[0]);
+	paintBox(cv, 56, 0, 2, 2, 1, hide(1.4));
+	paintBox(cv, 0, 44, 9, 3, 9, (face, x, y, fw, fh) =>
+		face === "top" ? shade(mouthPink, 0.9 + rand() * 0.15) // open-mouth interior
+				: hide(1.5)(face, x, y, fw, fh));
+	paintBox(cv, 40, 28, 4, 5, 4, hide(1.3));
+}
+
+// ---- grizzly: body(0,0 12x11x16) head(0,27 8x7x6) snout(28,27 4x3x3)
+//               ears(42,27 2x2x1) leg(0,40 5x6x5)
+function paintGrizzly(cv, P, rand) {
+	paintBox(cv, 0, 0, 12, 11, 16, furShader(P, rand, 1.8));
+	paintBox(cv, 0, 27, 8, 7, 6, furShader(P, rand, 1.8));
+	// eyes on the head front face at (u+d,v+d) = (6,33)
+	setPx(cv, 6 + 1, 33 + 2, P[0]); setPx(cv, 6 + 6, 33 + 2, P[0]);
+	paintBox(cv, 28, 27, 4, 3, 3, furShader(P, rand, 2.6, 0.5)); // lighter muzzle
+	setPx(cv, 31 + 1, 30 + 0, P[0]); setPx(cv, 31 + 2, 30 + 0, P[0]); // nose
+	paintBox(cv, 42, 27, 2, 2, 1, furShader(P, rand, 1.2, 0.5));
+	paintBox(cv, 0, 40, 5, 6, 5, furShader(P, rand, 1.2));
+}
+
+// ---- vulture: body(0,0 6x4x8) neck(28,0 3x5x3) head(40,0 4x3x5)
+//               wing(0,12 12x1x8) tail(0,21 5x1x6) leg(22,21 2x4x2)
+function paintVulture(cv, P, baldP, rand) {
+	const feathers = (baseIdx) => furShader(P, rand, baseIdx, 0.8);
+	paintBox(cv, 0, 0, 6, 4, 8, feathers(1.3));
+	// white ruff collar at the neck base, bald pink neck + head above it
+	paintBox(cv, 28, 0, 3, 5, 3, (face, x, y, fw, fh) =>
+		face !== "top" && face !== "bottom" && y >= fh - 1
+				? shade(P[4], 0.95 + rand() * 0.1)
+				: shade(baldP[2 + (rand() < 0.3 ? 1 : 0)], 0.92 + rand() * 0.12));
+	paintBox(cv, 40, 0, 4, 3, 5, (face, x, y, fw, fh) => {
+		if (face === "front") { // hooked beak tip
+			return shade(P[4], 0.75 + rand() * 0.1);
+		}
+		return shade(baldP[2 + (rand() < 0.3 ? 1 : 0)], 0.92 + rand() * 0.12);
+	});
+	// eyes on the head sides
+	setPx(cv, 40 + 1, 5 + 0, P[0]); setPx(cv, 40 + 11, 5 + 0, P[0]);
+	paintBox(cv, 0, 12, 12, 1, 8, (face, x, y, fw, fh) => {
+		// darker flight-feather edge along the wing tip and trailing edge
+		const tip = (face === "top" || face === "bottom") && (x < 3 || y >= fh - 2);
+		return tip ? shade(P[0], 0.9 + rand() * 0.1) : feathers(1.5)(face, x, y, fw, fh);
+	});
+	paintBox(cv, 0, 21, 5, 1, 6, feathers(1.2));
+	paintBox(cv, 22, 21, 2, 4, 2, (face, x, y, fw, fh) => shade(baldP[1], 0.9 + rand() * 0.1));
+}
+
+// ---- snake: head(0,0 3x2x3) bodyseg(12,0 3x2x4) tail(26,0 2x1x4)
+function paintSnake(cv, P, blotch, rand) {
+	const scales = (face, x, y, fw, fh) => {
+		if (face === "bottom") return shade(P[4], 0.95 + rand() * 0.08); // pale scutes
+		if ((x + y) % 3 === 0 && rand() < 0.6) return shade(blotch, 0.9 + rand() * 0.15); // dorsal blotches
+		return shade(P[1 + ((x + y) % 2)], 0.94 + rand() * 0.1);
+	};
+	paintBox(cv, 0, 0, 3, 2, 3, scales);
+	setPx(cv, 3 + 0, 2 + 0, P[0]); setPx(cv, 3 + 2, 2 + 0, P[0]); // eyes on head top
+	paintBox(cv, 12, 0, 3, 2, 4, scales);
+	paintBox(cv, 26, 0, 2, 1, 4, scales);
+}
+
 // ---------- mod icon: blocky gorilla face, palette from the same wolf/panda grays ----------
 function paintIcon(P) {
 	const cv = makeCanvas(128);
@@ -347,6 +420,43 @@ const snowP = samplePalette(polar, () => true);
 const spotDark = shade(leopardP[0], 0.6);
 const snowSpot = shade(snowP[0], 0.75);
 
+// ---------- Phase 2 palettes ----------
+const pig = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/pig/pig_temperate.png"));
+const mooshroom = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/cow/mooshroom_brown.png"));
+const chestnutWolf = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/wolf/wolf_chestnut.png"));
+const chicken = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/chicken/chicken_temperate.png"));
+const parrotGrey = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/parrot/parrot_grey.png"));
+const cactus = decodePng(readFromJar(jar, "assets/minecraft/textures/block/cactus_side.png"));
+const sandstone = decodePng(readFromJar(jar, "assets/minecraft/textures/block/sandstone.png"));
+
+// hippo: pig pinks + mooshroom browns, heavily desaturated toward gray-mauve hide
+const desat = (c, keep) => {
+	const l = lum(c);
+	return c.map((v, i) => Math.round(l + (v - l) * keep));
+};
+const hippoP = normalizeLum(
+		samplePalette({ px: Buffer.concat([pig.px, mooshroom.px]) }, (c) => sat(c) > 0.05)
+				.map((c) => desat(c, 0.35)), [40, 70, 100, 135, 180]);
+const hippoSwampP = normalizeLum(hippoP, [30, 55, 80, 110, 150]); // darker, murkier
+const mouthPink = samplePalette(pig, (c) => sat(c) > 0.15)[3]; // undesaturated pig pink
+
+// grizzly: chestnut wolf browns; black bear: same hues crushed dark
+const grizzlyP = normalizeLum(samplePalette(chestnutWolf, (c) => sat(c) > 0.1), [35, 62, 92, 128, 185]);
+const blackBearP = normalizeLum(grizzlyP, [18, 32, 50, 75, 130]);
+
+// vulture: grey parrot + chicken darks for feathers, chicken/pig pinks for the bald head
+const vultureP = normalizeLum(
+		samplePalette({ px: Buffer.concat([parrotGrey.px, chicken.px]) }, (c) => sat(c) < 0.35),
+		[25, 48, 75, 110, 200]);
+const baldP = normalizeLum(samplePalette({ px: Buffer.concat([chicken.px, pig.px]) },
+		(c) => sat(c) > 0.15 && c[0] >= c[1]), [90, 120, 150, 175, 200]);
+
+// snake: cactus greens for the python, sandstone tones for the desert viper
+const pythonP = normalizeLum(samplePalette(cactus, (c) => sat(c) > 0.1), [30, 55, 82, 112, 160]);
+const viperP = normalizeLum(samplePalette(sandstone, () => true), [55, 85, 115, 150, 195]);
+const viperBlotch = shade(viperP[0], 0.6);
+const pythonBlotch = shade(pythonP[0], 0.6);
+
 const jobs = [
 	["textures/entity/gorilla/lowland.png", (cv, r) => paintGorilla(cv, gorillaP, r, { silverback: false })],
 	["textures/entity/gorilla/lowland_silverback.png", (cv, r) => paintGorilla(cv, gorillaP, r, { silverback: true })],
@@ -357,6 +467,13 @@ const jobs = [
 	["textures/entity/tortoise/savanna.png", (cv, r) => paintTortoise(cv, shellP, r, skinP)],
 	["textures/entity/leopard/leopard.png", (cv, r) => paintLeopard(cv, leopardP, r, spotDark)],
 	["textures/entity/leopard/snow.png", (cv, r) => paintLeopard(cv, snowP, r, snowSpot)],
+	["textures/entity/hippo/river.png", (cv, r) => paintHippo(cv, hippoP, mouthPink, r)],
+	["textures/entity/hippo/swamp.png", (cv, r) => paintHippo(cv, hippoSwampP, mouthPink, r)],
+	["textures/entity/grizzly/grizzly.png", (cv, r) => paintGrizzly(cv, grizzlyP, r)],
+	["textures/entity/grizzly/black.png", (cv, r) => paintGrizzly(cv, blackBearP, r)],
+	["textures/entity/vulture/griffon.png", (cv, r) => paintVulture(cv, vultureP, baldP, r)],
+	["textures/entity/snake/viper.png", (cv, r) => paintSnake(cv, viperP, viperBlotch, r)],
+	["textures/entity/snake/python.png", (cv, r) => paintSnake(cv, pythonP, pythonBlotch, r)],
 ];
 
 for (const [rel, painter] of jobs) {

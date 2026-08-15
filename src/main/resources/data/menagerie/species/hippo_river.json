@@ -1,0 +1,21 @@
+{
+	"_tuning_notes": "River hippo, the territory tank. territory.radius = aggro zone in blocks around the water-anchored claim (anchor 'water' snaps the center to the nearest water within 8 at spawn; 'spawn' uses the spawn spot); aggro_inside=false would make it decorative. Intruders (survival players, boats) get a 3s yawn warning, then a charge; calms ~20s after the zone empties. knockback feeds ATTACK_KNOCKBACK. Boats die in 2 bites and drop planks+sticks (hardcoded drama). Babies are leashed to half the radius.",
+	"entity": "menagerie:hippo",
+	"species": "river",
+	"biomes": ["#minecraft:is_river"],
+	"weight": 6,
+	"group_size": [2, 4],
+	"worldgen_only": false,
+	"health": 60,
+	"attack": 10,
+	"speed": 0.24,
+	"knockback": 2.0,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/hippo/river.png",
+	"territory": {
+		"radius": 16,
+		"anchor": "water",
+		"aggro_inside": true
+	},
+	"special": {}
+}

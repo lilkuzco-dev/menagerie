@@ -1,0 +1,20 @@
+{
+	"_tuning_notes": "Desert viper: coiled and near-motionless until a player is within 4 blocks (rattle warning), strikes only inside 2 after warning — careful players never get bitten. venom block = effect applied on strike (amplifier 1 = Poison II, seconds 8). Slithers from sprinters. worldgen_only + no drops: ambience like the tortoise.",
+	"entity": "menagerie:snake",
+	"species": "viper",
+	"biomes": ["minecraft:desert", "#minecraft:is_badlands"],
+	"weight": 6,
+	"group_size": [1, 2],
+	"worldgen_only": true,
+	"health": 8,
+	"attack": 2,
+	"speed": 0.25,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/snake/viper.png",
+	"venom": {
+		"effect": "minecraft:poison",
+		"amplifier": 1,
+		"seconds": 8
+	},
+	"special": {}
+}

@@ -29,7 +29,13 @@ public class MenagerieRenderTest implements FabricClientGameTest {
 			server.runCommand("execute at @p run summon menagerie:leopard ~5 ~ ~7 {NoAI:1b}");
 			context.waitTicks(60);
 			context.takeScreenshot("menagerie_lineup");
-			context.waitTicks(10);
+			// clear the stage, then the Phase 2 row on its own
+			server.runCommand("kill @e[type=!minecraft:player]");
+			server.runCommand("execute at @p run summon menagerie:hippo ~-4.5 ~ ~8 {NoAI:1b}");
+			server.runCommand("execute at @p run summon menagerie:grizzly ~-1 ~ ~7 {NoAI:1b}");
+			server.runCommand("execute at @p run summon menagerie:vulture ~2 ~ ~6 {NoAI:1b,menagerie_flying:0b}");
+			server.runCommand("execute at @p run summon menagerie:snake ~4.5 ~ ~5 {NoAI:1b}");
+			context.waitTicks(60);
 			context.takeScreenshot("menagerie_lineup_2");
 		}
 	}

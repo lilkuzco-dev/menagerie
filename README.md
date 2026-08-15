@@ -1,11 +1,34 @@
 # Menagerie
 
 A wildlife mod for Fabric (Minecraft 26.2) in the spirit of Untamed Wilds and Alex's
-Mobs: a flagship gorilla with real troop life, plus a supporting roster, all built on a
+Mobs: a flagship gorilla with real troop life plus a growing roster, all built on a
 **data-driven species registry** — adding a new species of an existing animal is one
 JSON file, zero Java.
 
 ![roster](docs/lineup.png)
+![phase 2 roster](docs/lineup_phase2.png)
+
+## Roster (Phase 2, v0.2.0)
+
+- **Hippo** — rivers/swamps; claims a water-anchored **territory** (radius in JSON).
+  Passive outside it; intruders get a 3-second yawn warning, then a 60-HP charge.
+  Destroys boats in two bites (planks and sticks float where your ride was). Calms
+  ~20s after you leave. Species: `river`, `swamp` (darker, smaller).
+- **Grizzly Bear** — taiga/forests; neutral with **mother-aggro** (hurt a cub, or
+  crowd within 6 blocks of one, and every adult within 16 comes). Fishes salmon out
+  of rivers with paw-swipes when hungry (**diet** block), raids berry bushes
+  (mobGriefing), sleeps at night in shelter — day is the threat window. Species:
+  `grizzly`, `black` (smaller, flees players unless cubs are near).
+- **Vulture** — deserts/badlands/savannas; circles 20-30 blocks up. Any mob death
+  nearby that leaves meat pulls every vulture within 48 blocks: they converge,
+  circle ~10s, land, and strip the drops — a "something died here" beacon you can
+  read from across the biome. Only ever pecks players below 3 hearts. Never spawns
+  indoors; drifts away and despawns if never interacted with.
+- **Snake** — coiled and near-invisible until you're 4 blocks away (rattle warning),
+  strikes only inside 2 — careful players are never bitten. Species: `viper`
+  (desert/badlands, **venom** block: Poison II 8s), `python` (jungle, brief
+  constricting grab — the crocodile's grab code, shared). Worldgen-only ambience,
+  no drops.
 
 ## Roster (Phase 1, v0.1.0)
 
@@ -66,6 +89,19 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-0.1.0.jar`. Dev client:
 `build/run-gametest/screenshots/`).
 
 ## Changelog
+
+### 0.2.0 (2026-08-15)
+- Four new animals: hippo, grizzly bear, vulture, snake (7 new species files, 14 total
+  across 8 animals).
+- Three new **registry systems**, all additive JSON blocks: `territory` (water/spawn-
+  anchored aggro zones), `diet` (hunted entity ids + scavenging), `venom` (effect on
+  strike). Phase 1 species files load byte-for-byte unchanged. `size_scale` accepted
+  as an alias for `scale`; optional `knockback` stat feeds ATTACK_KNOCKBACK.
+- Phantom-style flight (vulture), boat destruction (hippo), fishing/sleep/cub-defense
+  (grizzly), telegraphed venom strikes (snake); crocodile grab refactored into shared
+  `GrabHold` (used by the python) with a regression test.
+- Fixed during verification: a worldgen chunk deadlock (territory claims during
+  finalizeSpawn), vulture despawn/landing behavior, snake flee-predicate slot.
 
 ### 0.1.0 (2026-08-15)
 - Initial release: gorilla (troops/silverback/chest-beat/taming/babies), crocodile

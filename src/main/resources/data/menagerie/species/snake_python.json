@@ -1,0 +1,19 @@
+{
+	"_tuning_notes": "Jungle python: no venom — special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper.",
+	"entity": "menagerie:snake",
+	"species": "python",
+	"biomes": ["#minecraft:is_jungle"],
+	"weight": 5,
+	"group_size": [1, 1],
+	"worldgen_only": true,
+	"health": 10,
+	"attack": 2,
+	"speed": 0.25,
+	"size_scale": 1.15,
+	"neutral": true,
+	"texture": "menagerie:textures/entity/snake/python.png",
+	"special": {
+		"constrict": true,
+		"constrict_ticks": 30
+	}
+}

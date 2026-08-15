@@ -20,6 +20,7 @@ public class Menagerie implements ModInitializer {
 		dev.lilkuzco.menagerie.entity.MenagerieEntities.init();
 		MenagerieSpawns.init();
 		MenagerieCommands.init();
+		MenagerieEvents.init();
 		LOGGER.info("Menagerie initialized");
 	}
 }
