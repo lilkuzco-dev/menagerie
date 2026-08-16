@@ -276,6 +276,12 @@ def main():
              "at least one species declares variant_rolls")
     a.anchor(any(d.get("textures") for _, _, _, d in species),
              "at least one species declares a multi-texture fur table")
+    # the roll range itself: every skin any species can select must have been enumerated
+    rollable = sum(len({d["texture"]} | set(d.get("textures", []))
+                       | {v["texture"] for v in d.get("variant_rolls", {}).values()})
+                   for _, _, _, d in species)
+    a.anchor(rollable >= len(species),
+             f"roll-range enumeration covered {rollable} skins across {len(species)} species")
 
     # ---- 3. Java literals + declared prefix families -------------------------
     lit_re = re.compile(r'"([^"\n]*?textures/[^"\n]*?)"')

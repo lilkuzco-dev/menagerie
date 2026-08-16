@@ -119,6 +119,28 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.5 — Density restored (2026-08-16)
+
+Texture fix confirmed in-world; this pairs it with the spawn-density correction.
+
+- **Gorilla habitat restored.** 0.4.4 cut mountain gorillas to bamboo jungle plus two
+  Terralith montane jungles, roughly halving gorilla habitat for the sake of a tidy
+  "jungle-family" reading — and players stopped finding them. `#minecraft:is_hill` is
+  back (3 → 6 vanilla biomes). `minecraft:grove` stays out: a snowy conifer forest was
+  the one genuinely wrong entry.
+- **Rarity ladder scaled 2.5x** — ubiquitous 12→30, common 8→20, uncommon 4→10,
+  rare 2→5, epic 1→2. The 0.4.0 cut was right about runaway accumulation but overshot
+  discoverability. `nearby_cap` is untouched and still bounds local density, so this
+  changes how often you *meet* an animal, not how much a biome silts up.
+- Scaling the **whole** ladder matters: bumping only the two tiers in use left
+  `uncommon` (10) above `common` (8). `spawn-lint` now enforces monotonicity (S10).
+- **New habitat census in the render battery**: counts how many *baked* biomes actually
+  carry a spawn entry per animal, and fails if any animal reaches zero. Everything
+  upstream of it — species JSON, tag resolution, registry load — is a statement of
+  intent; this measures the only thing that decides whether a player ever meets an
+  animal.
+- The roll-range table now prints on **every build**, not just on request.
+
 ### 0.4.4 — Every lion coat actually renders (2026-08-16)
 
 - **13 of the lion's 15 declared coats were unreachable.** `lion_savanna` declares 8

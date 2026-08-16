@@ -70,9 +70,13 @@ ECOLOGY = {
                   "#c:is_mountain", "minecraft:grove"},
     # terralith:* entries are montane JUNGLE, i.e. genuine mountain-gorilla habitat.
     # An id from an absent mod simply never matches, so naming it is safe.
+    # #minecraft:is_hill (windswept highlands) is deliberately allowed: removing it in
+    # 0.4.4 halved gorilla habitat and players stopped finding them. minecraft:grove is
+    # NOT allowed — a snowy conifer forest was the genuinely wrong entry.
     "gorilla":   {"#minecraft:is_jungle", "#c:is_jungle", "minecraft:jungle",
                   "minecraft:bamboo_jungle", "minecraft:sparse_jungle",
-                  "terralith:jungle_mountains", "terralith:rocky_jungle"},
+                  "terralith:jungle_mountains", "terralith:rocky_jungle",
+                  "#minecraft:is_hill", "#c:is_hill"},
     "grizzly":   {"#minecraft:is_forest", "#c:is_forest", "#minecraft:is_taiga",
                   "#c:is_taiga", "#minecraft:is_mountain", "#c:is_mountain"},
     "tortoise":  {"#minecraft:is_savanna", "#c:is_savanna", "#minecraft:is_badlands",
@@ -177,6 +181,18 @@ def main():
     water, entities_src = waterline_entities()
 
     lint.anchor(len(tiers) >= 5, f"rarity.json defines {len(tiers)} tiers (expected >= 5)")
+
+    # S10 — the ladder must stay monotonic. Retuning only the tiers currently in use is
+    # the natural way to do it and quietly leaves "common" rarer than "uncommon".
+    LADDER = ["ubiquitous", "common", "uncommon", "rare", "epic"]
+    known = [t for t in LADDER if t in tiers]
+    for a_name, b_name in zip(known, known[1:]):
+        aw, bw = tiers[a_name]["weight"], tiers[b_name]["weight"]
+        if aw < bw:
+            lint.fail("S10", f"rarity ladder inverted: {a_name} weight {aw} is below "
+                             f"{b_name} weight {bw} — a commoner tier must never be rarer")
+    lint.anchor(len(known) == len(LADDER),
+                f"rarity ladder covers all {len(LADDER)} named tiers ({len(known)} found)")
     lint.anchor(bool(water),
                 f"MenagerieEntities scan found waterline placements: {sorted(water) or 'NONE'}")
     lint.anchor("SpawnPlacements.register" in entities_src,

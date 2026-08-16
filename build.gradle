@@ -72,7 +72,10 @@ tasks.register('assetAudit', Exec) {
 		commandLine 'python3', 'tools/asset-audit.py',
 				'--jar', tasks.named('jar').get().archiveFile.get().asFile.absolutePath,
 				'--vanilla-jar', vanillaJar.absolutePath,
-				'--vanilla-assets', vanillaAssets.absolutePath
+				'--vanilla-assets', vanillaAssets.absolutePath,
+				// print the roll-range table on EVERY build: every skin index the renderer
+				// can select, held against the textures actually in the jar
+				'--skin-matrix'
 	}
 }
 

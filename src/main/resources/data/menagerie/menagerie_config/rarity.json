@@ -1,10 +1,40 @@
 {
-	"_tuning_notes": "Spawn rarity presets, calibrated against vanilla's own jungle pool (parrot 40 / chicken 10 / ocelot 2 / panda 1). A species picks ONE tier name and inherits weight + group size + nearby_cap; explicit weight/group_size/nearby_cap in a species file still win. nearby_cap is the accumulation killer: CREATURE-category animals never despawn, so without a cap a modest weight piles up forever (this is how gorillas reached ~30x panda density). attempt_chance thins epic tiers further — only that fraction of otherwise-valid spawn attempts survive. Hot-reloadable: edit + /reload and density changes with no rebuild.",
+	"_tuning_notes": "Spawn rarity presets, calibrated against vanilla's own jungle pool (parrot 40 / chicken 10 / ocelot 2 / panda 1). A species picks ONE tier name and inherits weight + group size + nearby_cap; explicit weight/group_size/nearby_cap in a species file still win. nearby_cap is the accumulation killer: CREATURE-category animals never despawn, so without a cap a modest weight piles up forever (this is how gorillas reached ~30x panda density). attempt_chance thins epic tiers further — only that fraction of otherwise-valid spawn attempts survive. Hot-reloadable: edit + /reload and density changes with no rebuild. DENSITY 0.4.5: the whole ladder scaled 2.5x (ubiquitous 12->30, common 8->20, uncommon 4->10, rare 2->5, epic 1->2). Scaling the WHOLE ladder matters: bumping only the two tiers in use left uncommon(10) above common(8), i.e. a tier named 'common' rarer than one named 'uncommon'. spawn-lint now enforces monotonicity. The 0.4.0 cut to panda-class was right about runaway accumulation but overshot discoverability — players could cross a pregenerated world and meet one animal. nearby_cap is untouched and still bounds local density, so this raises how often you MEET an animal without letting a biome silt up. Raising a weight above the value baked at world load needs a restart; lowering is live on /reload.",
 	"tiers": {
-		"ubiquitous": {"weight": 12, "group_min": 2, "group_max": 4, "nearby_cap": 12, "attempt_chance": 1.0},
-		"common":     {"weight": 8,  "group_min": 1, "group_max": 3, "nearby_cap": 10, "attempt_chance": 1.0},
-		"uncommon":   {"weight": 4,  "group_min": 1, "group_max": 3, "nearby_cap": 6,  "attempt_chance": 1.0},
-		"rare":       {"weight": 2,  "group_min": 1, "group_max": 2, "nearby_cap": 4,  "attempt_chance": 1.0},
-		"epic":       {"weight": 1,  "group_min": 1, "group_max": 2, "nearby_cap": 3,  "attempt_chance": 0.35}
+		"ubiquitous": {
+			"weight": 30,
+			"group_min": 2,
+			"group_max": 4,
+			"nearby_cap": 12,
+			"attempt_chance": 1.0
+		},
+		"common": {
+			"weight": 20,
+			"group_min": 1,
+			"group_max": 3,
+			"nearby_cap": 10,
+			"attempt_chance": 1.0
+		},
+		"uncommon": {
+			"weight": 10,
+			"group_min": 1,
+			"group_max": 3,
+			"nearby_cap": 6,
+			"attempt_chance": 1.0
+		},
+		"rare": {
+			"weight": 5,
+			"group_min": 1,
+			"group_max": 2,
+			"nearby_cap": 4,
+			"attempt_chance": 1.0
+		},
+		"epic": {
+			"weight": 2,
+			"group_min": 1,
+			"group_max": 2,
+			"nearby_cap": 3,
+			"attempt_chance": 0.35
+		}
 	}
 }

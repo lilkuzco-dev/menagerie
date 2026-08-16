@@ -172,6 +172,7 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 					failures.addAll(verify(context, row));
 				}
 
+				failures.addAll(habitatCensus(server));
 				failures.addAll(skinSweep(context, server, connection));
 				failures.addAll(babySizeCalibration(context, server, connection));
 
@@ -181,6 +182,53 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Count how many BAKED biomes actually carry a spawn entry for each animal.
+	 *
+	 * <p>Everything upstream of this is a claim about intent: the species JSON lists
+	 * biomes, the linter resolves tags on paper, the registry loads. None of that proves
+	 * the one thing that decides whether a player ever meets an animal — that the biome
+	 * modification put a real {@code SpawnerData} into real biomes at world load. An
+	 * animal with zero biome entries is invisible in-game and silent in every other
+	 * check, so it is asserted here.
+	 */
+	private static List<String> habitatCensus(TestDedicatedServerContext server) {
+		return server.computeOnServer(mc -> {
+			var biomes = mc.registryAccess()
+					.lookupOrThrow(net.minecraft.core.registries.Registries.BIOME);
+			java.util.Map<String, Integer> hits = new java.util.TreeMap<>();
+			java.util.Map<String, Integer> weight = new java.util.TreeMap<>();
+			int totalBiomes = 0;
+			for (var entry : biomes.entrySet()) {
+				totalBiomes++;
+				var mobs = entry.getValue().getMobSettings()
+						.getMobs(net.minecraft.world.entity.MobCategory.CREATURE);
+				for (var w : mobs.unwrap()) {
+					var type = w.value().type();
+					String id = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+							.getKey(type).toString();
+					if (id.startsWith("menagerie:")) {
+						hits.merge(id, 1, Integer::sum);
+						weight.merge(id, w.weight(), Integer::sum);
+					}
+				}
+			}
+			System.out.println("[menagerie-mp-test] habitat census over " + totalBiomes
+					+ " baked biomes:");
+			List<String> problems = new ArrayList<>();
+			for (var id : new java.util.TreeSet<>(SpeciesRegistry.all().keySet())) {
+				int n = hits.getOrDefault(id, 0);
+				System.out.printf("[menagerie-mp-test]   %-22s %3d biomes, summed weight %d%n",
+						id, n, weight.getOrDefault(id, 0));
+				if (n == 0) {
+					problems.add(id + " has spawn entries in ZERO baked biomes — it can never "
+							+ "appear naturally, whatever its species JSON claims");
+				}
+			}
+			return problems;
+		});
 	}
 
 	/**
