@@ -1,10 +1,15 @@
 {
-	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance).",
+	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance). Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required.",
 	"entity": "menagerie:gorilla",
 	"species": "lowland",
-	"biomes": ["#minecraft:is_jungle"],
+	"biomes": [
+		"#minecraft:is_jungle"
+	],
 	"weight": 8,
-	"group_size": [3, 6],
+	"group_size": [
+		3,
+		6
+	],
 	"worldgen_only": false,
 	"health": 30,
 	"attack": 6,
@@ -19,5 +24,16 @@
 		"intimidate_radius": 6.0,
 		"intimidate_slowness_ticks": 100,
 		"foliage_tearing": true
+	},
+	"cage_tier": 2,
+	"guide_blurb": "The jungle's gentle heavyweight - until you touch its family.",
+	"forage": {
+		"blocks": [
+			"minecraft:melon",
+			"minecraft:sweet_berry_bush"
+		],
+		"range": 12,
+		"cooldown_ticks": 1200,
+		"content_minutes": 5
 	}
 }

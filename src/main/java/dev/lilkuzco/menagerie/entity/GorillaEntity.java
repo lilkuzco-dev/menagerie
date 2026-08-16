@@ -92,7 +92,14 @@ public class GorillaEntity extends SpeciesMob {
 		this.goalSelector.addGoal(5, new TemptGoal(this, 1.1, stack -> isFood(stack) || isTameItem(stack), false));
 		this.goalSelector.addGoal(6, new BabyRideAdultGoal(this));
 		this.goalSelector.addGoal(7, new FoliageTearGoal(this));
-		this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.9));
+		this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.9) {
+			@Override
+			public boolean canUse() {
+				// hungry troops roam restlessly; content ones lounge near the food
+				setInterval(isContent() ? 240 : 80);
+				return super.canUse();
+			}
+		});
 		this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
 
@@ -117,6 +124,26 @@ public class GorillaEntity extends SpeciesMob {
 			scale.removeModifier(SILVERBACK_SCALE_ID);
 			attack.removeModifier(SILVERBACK_ATTACK_ID);
 		}
+	}
+
+	/** A fed troop is easier to befriend: 1-in-3 doubles to 2-in-3 while content. */
+	@Override
+	protected float tameChance() {
+		return isContent() ? 2.0F / 3.0F : 1.0F / 3.0F;
+	}
+
+	/** Meals are troop news: everyone within 16 blocks shares the contentment. */
+	@Override
+	public void onForaged() {
+		super.onForaged();
+		for (GorillaEntity other : level().getEntitiesOfClass(GorillaEntity.class,
+				getBoundingBox().inflate(16.0, 8.0, 16.0), other -> other != this && sameTroop(other))) {
+			other.markContentFromTroop();
+		}
+	}
+
+	void markContentFromTroop() {
+		super.onForaged(); // set the timer without re-broadcasting (no infinite recursion)
 	}
 
 	/** Silverbacks get the "<species>_silverback.png" variant from the texture pipeline. */
@@ -202,6 +229,10 @@ public class GorillaEntity extends SpeciesMob {
 					break;
 				}
 			}
+			// the silverback's position IS the troop center for the territory API
+			if (!isTame() && tickCount % 120 == 0) {
+				dev.lilkuzco.menagerie.MenagerieTerritories.refresh(level, blockPosition(), 12, "gorilla_troop");
+			}
 			runChestBeat(level);
 			return;
 		}
@@ -260,6 +291,9 @@ public class GorillaEntity extends SpeciesMob {
 		if (hostileNear || beatCooldown <= 0) {
 			triggerChestBeat(level);
 			beatCooldown = cooldownMin + getRandom().nextInt(Math.max(1, cooldownMax - cooldownMin));
+			if (isContent()) {
+				beatCooldown *= 2; // well-fed silverbacks have less to prove
+			}
 			if (hostileNear) {
 				hostileBeatCooldown = 200;
 			}

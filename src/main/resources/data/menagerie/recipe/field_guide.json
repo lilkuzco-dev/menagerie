@@ -1,0 +1,6 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"category": "misc",
+	"ingredients": ["minecraft:book", "minecraft:melon_slice"],
+	"result": {"id": "menagerie:field_guide", "count": 1}
+}

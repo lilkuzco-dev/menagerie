@@ -1,10 +1,16 @@
 {
-	"_tuning_notes": "Mountain gorilla: windswept hills + grove, thicker fur texture, +4 health over lowland, slightly smaller troops. Proves biome-tag species routing from the same entity class.",
+	"_tuning_notes": "Mountain gorilla: windswept hills + grove, thicker fur texture, +4 health over lowland, slightly smaller troops. Proves biome-tag species routing from the same entity class. Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required.",
 	"entity": "menagerie:gorilla",
 	"species": "mountain",
-	"biomes": ["#minecraft:is_hill", "minecraft:grove"],
+	"biomes": [
+		"#minecraft:is_hill",
+		"minecraft:grove"
+	],
 	"weight": 6,
-	"group_size": [3, 5],
+	"group_size": [
+		3,
+		5
+	],
 	"worldgen_only": false,
 	"health": 34,
 	"attack": 6,
@@ -19,5 +25,16 @@
 		"intimidate_radius": 6.0,
 		"intimidate_slowness_ticks": 100,
 		"foliage_tearing": true
+	},
+	"cage_tier": 2,
+	"guide_blurb": "Thicker coat, thinner air, same rules.",
+	"forage": {
+		"blocks": [
+			"minecraft:melon",
+			"minecraft:sweet_berry_bush"
+		],
+		"range": 12,
+		"cooldown_ticks": 1200,
+		"content_minutes": 5
 	}
 }

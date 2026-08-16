@@ -7,6 +7,31 @@ JSON file, zero Java.
 
 ![roster](docs/lineup.png)
 ![phase 2 roster](docs/lineup_phase2.png)
+![field guide](docs/field_guide.png)
+
+## The interaction layer (Phase 3, v0.3.0)
+
+- **Cage Traps** — craft a cage (8 iron bars + chest) or a **Reinforced Cage** (8
+  iron blocks + cage), bait it with the animal's favorite food (tame/breed/diet
+  item), and a calm wild animal walks itself in. Break the closed cage and carry
+  the animal as an item (tooltip names the occupant); place and right-click to
+  release with species, health, name and tame state intact. Big animals (gorilla,
+  crocodile, hippo, grizzly — `cage_tier: 2`) shred standard cages after 3 seconds.
+  Aggroed animals can't be caged; tamed pets can be led in for transport.
+- **Field Guide** — book + melon slice. Species entries unlock by getting within 8
+  blocks of a living specimen (ping + action-bar note); undiscovered entries are
+  silhouettes. Every entry is generated live from the species registry — biomes,
+  stats, taming, diet, territory, venom, cage tier, plus an optional `guide_blurb`
+  line — so datapack species appear automatically. Completion counter included.
+- **Gorilla forage ecology** — troops raid melons and berry bushes (mobGriefing);
+  a troop fed in the last 5 minutes is *content*: taming chance doubles (2/3),
+  chest-beats calm down, and they lounge instead of roaming. Feeding by hand
+  counts. Driven by a generic optional `forage` JSON block any animal can adopt.
+- **Warfront crossover (optional)** — with Warfront installed, soldiers softly
+  avoid live hippo territories and gorilla troop grounds, and combat inside those
+  zones turns the animals on the combatants. Implemented with zero hard dependency
+  (entity-id matching only); `MenagerieTerritories` is a public API + event other
+  mods can use. Menagerie runs identically without Warfront.
 
 ## Roster (Phase 2, v0.2.0)
 
@@ -84,11 +109,23 @@ from other mods. All sounds are pitch-shifted references to vanilla sound events
 
 ## Building
 
-JDK 25. `./gradlew build` → `build/libs/menagerie-0.1.0.jar`. Dev client:
+JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 `./gradlew runClient`. Render regression test: `./gradlew runGametest` (screenshots in
 `build/run-gametest/screenshots/`).
 
 ## Changelog
+
+### 0.3.0 (2026-08-15)
+- Cage Traps (two tiers) with full-fidelity capture/transport/release; `cage_tier`
+  species field.
+- Field Guide with proximity discovery, silhouettes, live-registry entries,
+  `guide_blurb` field.
+- Generic `forage` JSON block + gorilla contentment ecology (taming 1/3 → 2/3 when
+  fed, calmer chest-beats, lazier roaming).
+- `MenagerieTerritories` public API + `TERRITORY_ACTIVE` event; optional Warfront
+  compat module (soldier territory avoidance, skirmish consequences), soft both ways.
+- Leopard/crocodile/snake gained `diet` prey lists (also their cage bait); hippos
+  breed with melon slices.
 
 ### 0.2.0 (2026-08-15)
 - Four new animals: hippo, grizzly bear, vulture, snake (7 new species files, 14 total

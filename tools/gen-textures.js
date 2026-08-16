@@ -383,6 +383,56 @@ function paintSnake(cv, P, blotch, rand) {
 	paintBox(cv, 26, 0, 2, 1, 4, scales);
 }
 
+// ---------- Phase 3: cage textures, field guide icon, guide entry icons ----------
+// cage: bar grid from iron_bars/iron_block palettes; closed variant is denser + dim fill
+function paintCage(cv, barP, thick, closed, rand) {
+	const size = 16;
+	const bar = (x, y) => setPx(cv, x, y, shade(barP[2 + ((x + y) % 2)], 0.92 + rand() * 0.12));
+	for (let x = 0; x < size; x++) { // frame
+		for (let t = 0; t < thick; t++) {
+			bar(x, t); bar(x, size - 1 - t); bar(t, x); bar(size - 1 - t, x);
+		}
+	}
+	for (let x = 3; x < size - 1; x += 4) { // vertical bars
+		for (let y = 0; y < size; y++) {
+			for (let t = 0; t < thick; t++) bar(x + t, y);
+		}
+	}
+	if (closed) {
+		for (let y = 5; y < size - 1; y += 5) { // horizontal lock-bars
+			for (let x = 0; x < size; x++) bar(x, y);
+		}
+		for (let y = 1; y < size - 1; y++) { // dim interior: something is in there
+			for (let x = 1; x < size - 1; x++) {
+				const i = (y * cv.w + x) * 4;
+				if (cv.px[i + 3] === 0 && rand() < 0.5) setPx(cv, x, y, shade(barP[0], 0.5));
+			}
+		}
+	}
+}
+
+// guide entry icon: crop a face region from the species texture, integer-upscale into
+// a 32x32 tile; the silhouette variant flattens every opaque pixel to dark slate
+function guideIcon(srcPng, rx, ry, rw, rh, silhouette) {
+	const cv = makeCanvas(32);
+	const scale = Math.max(1, Math.floor(Math.min(32 / rw, 32 / rh)));
+	const ox = Math.floor((32 - rw * scale) / 2);
+	const oy = Math.floor((32 - rh * scale) / 2);
+	for (let y = 0; y < rh; y++) {
+		for (let x = 0; x < rw; x++) {
+			const i = ((ry + y) * srcPng.w + (rx + x)) * 4;
+			if (srcPng.px[i + 3] < 200) continue;
+			const c = silhouette ? [38, 40, 48] : [srcPng.px[i], srcPng.px[i + 1], srcPng.px[i + 2]];
+			for (let sy = 0; sy < scale; sy++) {
+				for (let sx = 0; sx < scale; sx++) {
+					setPx(cv, ox + x * scale + sx, oy + y * scale + sy, c);
+				}
+			}
+		}
+	}
+	return cv;
+}
+
 // ---------- mod icon: blocky gorilla face, palette from the same wolf/panda grays ----------
 function paintIcon(P) {
 	const cv = makeCanvas(128);
@@ -488,4 +538,71 @@ for (const [rel, painter] of jobs) {
 const icon = paintIcon(gorillaP);
 fs.writeFileSync(path.join(OUT_ROOT, "icon.png"), encodePng(icon.w, icon.h, icon.px));
 console.log("wrote icon.png");
+
+// ---------- Phase 3 outputs ----------
+const ironBars = decodePng(readFromJar(jar, "assets/minecraft/textures/block/iron_bars.png"));
+const ironBlock = decodePng(readFromJar(jar, "assets/minecraft/textures/block/iron_block.png"));
+const barP = samplePalette(ironBars, () => true);
+const blockP = samplePalette(ironBlock, () => true);
+const cageJobs = [
+	["textures/block/cage_trap.png", barP, 1, false],
+	["textures/block/cage_trap_closed.png", barP, 1, true],
+	["textures/block/reinforced_cage_trap.png", blockP, 2, false],
+	["textures/block/reinforced_cage_trap_closed.png", blockP, 2, true],
+];
+for (const [rel, palette, thick, closed] of cageJobs) {
+	const cv = makeCanvas(16);
+	paintCage(cv, palette, thick, closed, mulberry32(hashStr(rel)));
+	const out = path.join(OUT_ROOT, rel);
+	fs.mkdirSync(path.dirname(out), { recursive: true });
+	fs.writeFileSync(out, encodePng(cv.w, cv.h, cv.px));
+	console.log("wrote", rel);
+}
+
+// field guide item: the vanilla book, hue-shifted toward melon green
+const book = decodePng(readFromJar(jar, "assets/minecraft/textures/item/book.png"));
+const guideItem = makeCanvas(16);
+for (let y = 0; y < 16; y++) {
+	for (let x = 0; x < 16; x++) {
+		const i = (y * book.w + x) * 4;
+		if (book.px[i + 3] < 200) continue;
+		const c = [book.px[i], book.px[i + 1], book.px[i + 2]];
+		// shift the red leather cover toward green, keep pages/binding as-is
+		const isCover = sat(c) > 0.2 && c[0] >= c[1];
+		setPx(guideItem, x, y, isCover ? [Math.round(c[1] * 0.55), Math.round(c[0] * 0.95), Math.round(c[2] * 0.5)] : c);
+	}
+}
+fs.mkdirSync(path.join(OUT_ROOT, "textures/item"), { recursive: true });
+fs.writeFileSync(path.join(OUT_ROOT, "textures/item/field_guide.png"),
+		encodePng(16, 16, guideItem.px));
+console.log("wrote textures/item/field_guide.png");
+
+// guide entry icons: face crops from OUR species textures (regions follow each
+// model's UV map) + silhouette variants — the "no new art" discovery presentation
+const ICON_REGIONS = {
+	gorilla: [6, 6, 8, 8],       // head front
+	crocodile: [9, 20, 6, 9],    // snout from above
+	tortoise: [12, 0, 10, 12],   // shell from above
+	leopard: [5, 26, 6, 5],      // head front
+	hippo: [10, 38, 10, 6],      // head front
+	grizzly: [6, 33, 8, 7],      // head front
+	vulture: [45, 0, 4, 5],      // bald head from above
+	snake: [12, 0, 14, 6],       // body segment strip
+};
+const speciesDir = path.join(__dirname, "..", "src/main/resources/data/menagerie/species");
+for (const file of fs.readdirSync(speciesDir)) {
+	const spec = JSON.parse(fs.readFileSync(path.join(speciesDir, file), "utf8"));
+	const animal = spec.entity.split(":")[1];
+	const region = ICON_REGIONS[animal];
+	const texRel = spec.texture.split(":")[1]; // textures/entity/...
+	const tex = decodePng(fs.readFileSync(path.join(OUT_ROOT, texRel)));
+	for (const silhouette of [false, true]) {
+		const cv = guideIcon(tex, region[0], region[1], region[2], region[3], silhouette);
+		const rel = "textures/gui/guide/" + animal + "_" + spec.species + (silhouette ? "_silhouette" : "") + ".png";
+		const out = path.join(OUT_ROOT, rel);
+		fs.mkdirSync(path.dirname(out), { recursive: true });
+		fs.writeFileSync(out, encodePng(cv.w, cv.h, cv.px));
+	}
+	console.log("wrote guide icons for", animal, spec.species);
+}
 console.log("done.");

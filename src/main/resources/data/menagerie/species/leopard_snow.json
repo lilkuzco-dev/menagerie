@@ -1,15 +1,32 @@
 {
-	"_tuning_notes": "Snow leopard: grove + peaks, white coat, a bit tougher for the cold heights. Proves cold-biome species routing alongside the mountain gorilla.",
+	"_tuning_notes": "Snow leopard: grove + peaks, white coat, a bit tougher for the cold heights. Proves cold-biome species routing alongside the mountain gorilla. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
 	"entity": "menagerie:leopard",
 	"species": "snow",
-	"biomes": ["minecraft:grove", "minecraft:jagged_peaks", "minecraft:frozen_peaks", "minecraft:snowy_slopes"],
+	"biomes": [
+		"minecraft:grove",
+		"minecraft:jagged_peaks",
+		"minecraft:frozen_peaks",
+		"minecraft:snowy_slopes"
+	],
 	"weight": 5,
-	"group_size": [1, 2],
+	"group_size": [
+		1,
+		2
+	],
 	"worldgen_only": false,
 	"health": 26,
 	"attack": 5,
 	"speed": 0.33,
 	"neutral": true,
 	"texture": "menagerie:textures/entity/leopard/snow.png",
-	"special": {}
+	"special": {},
+	"cage_tier": 1,
+	"guide_blurb": "A ghost of the peaks.",
+	"diet": {
+		"hunts": [
+			"minecraft:chicken",
+			"minecraft:rabbit"
+		],
+		"scavenges": false
+	}
 }

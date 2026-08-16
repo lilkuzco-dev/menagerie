@@ -36,7 +36,26 @@ public record Species(
 		JsonObject special,
 		@org.jspecify.annotations.Nullable Territory territory,
 		@org.jspecify.annotations.Nullable Diet diet,
-		@org.jspecify.annotations.Nullable Venom venom) {
+		@org.jspecify.annotations.Nullable Venom venom,
+		int cageTier,
+		String guideBlurb,
+		@org.jspecify.annotations.Nullable Forage forage) {
+
+	/** Optional "forage" block: blocks the animal seeks out and eats (mobGriefing-gated). */
+	public record Forage(List<String> blocks, int range, int cooldownTicks, int contentMinutes) {
+		static Forage fromJson(JsonObject json) {
+			List<String> blocks = GsonHelper.getAsJsonArray(json, "blocks", new com.google.gson.JsonArray())
+					.asList().stream().map(e -> e.getAsString()).toList();
+			return new Forage(blocks,
+					GsonHelper.getAsInt(json, "range", 12),
+					GsonHelper.getAsInt(json, "cooldown_ticks", 1200),
+					GsonHelper.getAsInt(json, "content_minutes", 5));
+		}
+
+		public boolean matches(Identifier blockId) {
+			return blocks.contains(blockId.toString());
+		}
+	}
 
 	/** Optional "territory" block: water/spawn-anchored aggro zone (hippo). */
 	public record Territory(int radius, String anchor, boolean aggroInside) {
@@ -102,7 +121,10 @@ public record Species(
 				GsonHelper.getAsJsonObject(json, "special", new JsonObject()),
 				json.has("territory") ? Territory.fromJson(GsonHelper.getAsJsonObject(json, "territory")) : null,
 				json.has("diet") ? Diet.fromJson(GsonHelper.getAsJsonObject(json, "diet")) : null,
-				json.has("venom") ? Venom.fromJson(GsonHelper.getAsJsonObject(json, "venom")) : null);
+				json.has("venom") ? Venom.fromJson(GsonHelper.getAsJsonObject(json, "venom")) : null,
+				GsonHelper.getAsInt(json, "cage_tier", 1),
+				GsonHelper.getAsString(json, "guide_blurb", ""),
+				json.has("forage") ? Forage.fromJson(GsonHelper.getAsJsonObject(json, "forage")) : null);
 	}
 
 	public boolean matchesBiome(Holder<Biome> biome) {

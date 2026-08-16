@@ -37,6 +37,12 @@ public class MenagerieRenderTest implements FabricClientGameTest {
 			server.runCommand("execute at @p run summon menagerie:snake ~4.5 ~ ~5 {NoAI:1b}");
 			context.waitTicks(60);
 			context.takeScreenshot("menagerie_lineup_2");
+			// Field Guide: the nearby row already triggered discovery pings; open it
+			server.runCommand("give @p menagerie:field_guide");
+			context.waitTicks(20);
+			context.getInput().pressKey(options -> options.keyUse);
+			context.waitTicks(20);
+			context.takeScreenshot("menagerie_guide");
 		}
 	}
 }

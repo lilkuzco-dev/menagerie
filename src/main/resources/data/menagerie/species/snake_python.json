@@ -1,10 +1,15 @@
 {
-	"_tuning_notes": "Jungle python: no venom — special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper.",
+	"_tuning_notes": "Jungle python: no venom \u2014 special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
 	"entity": "menagerie:snake",
 	"species": "python",
-	"biomes": ["#minecraft:is_jungle"],
+	"biomes": [
+		"#minecraft:is_jungle"
+	],
 	"weight": 5,
-	"group_size": [1, 1],
+	"group_size": [
+		1,
+		1
+	],
 	"worldgen_only": true,
 	"health": 10,
 	"attack": 2,
@@ -15,5 +20,14 @@
 	"special": {
 		"constrict": true,
 		"constrict_ticks": 30
+	},
+	"cage_tier": 1,
+	"guide_blurb": "The hug you do not want.",
+	"diet": {
+		"hunts": [
+			"minecraft:rabbit",
+			"minecraft:chicken"
+		],
+		"scavenges": false
 	}
 }

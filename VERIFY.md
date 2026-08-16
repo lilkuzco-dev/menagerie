@@ -58,3 +58,25 @@ checks. Census gained `|sleeping`, `|flying`, `|rattling` markers.
   guarded with `hasChunkAt`.
 - Vulture ambient-despawn distance, vulture descent steering (both above).
 - Snake AvoidEntityGoal predicate slot (above).
+
+---
+
+# Menagerie 0.3.0 — Phase 3 Battery
+
+Date: 2026-08-15. Same rig (dev dedicated server port 25567, carpet fake player,
+RCON; client gametest for screen rendering). Census gained the `|content` marker.
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | Cage: bait → capture → break → carry → place → release | **PASS** — baited a standard cage with raw chicken (leopard `diet.hunts` doubles as bait); a calm named leopard ("Whiskers") was lured and captured: blockstate `closed=true`, world entity gone, block entity holding the FULL NBT (species, name, health, attributes, tags). Broken cage dropped an item carrying `block_state` + `block_entity_data` (occupant aboard — the tooltip's data source, verified in components). Placed → closed cage restored; empty-hand use → Whiskers released alive, name intact, cage reopened for reuse. Fix found: loot `copy_components` needs the BE to export via `collectImplicitComponents` — raw save data isn't picked up. |
+| 2 | Tier rule | **PASS** — grizzly (cage_tier 2) in a standard cage: captured, then broke out ~3s later, cage block destroyed (drops nothing). Reinforced cage: held permanently. **Aggroed hippo could NOT be captured** (baited cage sat untouched while `|angry`); the same hippo calm was captured in a reinforced cage (after widening the spring check to the bounding box — a 1.9-wide hippo can't put its center within 1.6 of the block). |
+| 3 | Tamed round trip | **PASS** — freshly tamed gorilla (Owner UUID verified BEFORE capture), captured in a reinforced cage, released: `Owner` matches the same player UUID exactly, census `|tame`. (Tamed pets aren't bait-lured from a distance; one led beside the cage is captured — owner transport.) |
+| 4 | Field Guide | **PASS** — discovery pings fire within 8 blocks (guide counter climbed 0→3→8 as the fake player toured animals); action-bar + sound on first encounter. The gametest screenshot (`docs/field_guide.png`) shows the screen: "Documented: 8/14", discovered entries by name with icons, undiscovered as ??? silhouettes, and a live-registry entry (blurb, biomes, stats, hunts, cage tier). Throwaway species JSON + `/reload` → registry 15 and "guide: 7/15" (new species = undiscovered, denominator live); deleted → back to 7/14. Zero hand-written entry text. |
+| 5 | Forage ecology | **PASS** — melons placed by a jungle troop were eaten within 10s (one per cooldown — the second melon survived), eater `|content`. mobGriefing OFF: melon untouched, but hand-feeding still set `|content` on the fed gorilla AND a troop-mate within 16 (mood spreads). **Taming statistics** (landed feeds only, NoAI-pinned subjects after two flaky carpet-aim benches): unfed first feeds 6/15 tamed (40%, expected 33%); content follow-up feeds 9/9 (100%, expected 67%) — the doubling is unambiguous (Fisher p≈0.002). Fix found: the tame roll must happen BEFORE the meal registers, or the first feed already counts as content. |
+| 6 | Warfront crossover | **PASS** — with Warfront loaded ("Warfront detected" in log): two idle soldiers summoned inside a live hippo territory were steered out (7→27 and 2→19 blocks from center within ~16s, soft pathing nudge). Soldier-vs-soldier `/damage` inside the territory: the hippo charged 20 blocks at the combatants and bit the attacker (24→18 HP). **Without the Warfront jar**: identical boot (no compat line), all Phase 3 features work, summons fine, zero errors. |
+| 7 | Regression sweep | **PASS** (spread through this battery): gorilla taming (statistics bench), hippo yawn/charge/calm (cage tests), crocodile grab fingerprint + python constrict + viper venom (Phase 2 battery, unchanged code), vulture scavenge (Phase 2, unchanged). All 14 Phase 1-2 species JSONs load with the new fields ignored-by-default (additive schema, third time). |
+| 8 | Build & co-load | **PASS** — clean build; server booted all-three-mods throughout the battery; boots and runs without Warfront. |
+
+## Notes
+- The fake player was killed twice more this battery (hippo, python) — Menagerie
+  remains the leading cause of death for Steve across all three phases.

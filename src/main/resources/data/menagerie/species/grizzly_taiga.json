@@ -1,10 +1,15 @@
 {
-	"_tuning_notes": "Taiga grizzly, the diet-system showcase. diet.hunts = entity ids fished/hunted when hungry (paw-swipe at salmon in water within 12, 40% per swipe, hardcoded); diet.scavenges reserved for shared use with the vulture. special.berry_raiding also needs mobGriefing. Mother-aggro: hurting a cub or standing within 6 blocks of one angers every adult within 16. Sleeps at night in shelter — day is the threat window.",
+	"_tuning_notes": "Taiga grizzly, the diet-system showcase. diet.hunts = entity ids fished/hunted when hungry (paw-swipe at salmon in water within 12, 40% per swipe, hardcoded); diet.scavenges reserved for shared use with the vulture. special.berry_raiding also needs mobGriefing. Mother-aggro: hurting a cub or standing within 6 blocks of one angers every adult within 16. Sleeps at night in shelter \u2014 day is the threat window. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier.",
 	"entity": "menagerie:grizzly",
 	"species": "grizzly",
-	"biomes": ["#minecraft:is_taiga"],
+	"biomes": [
+		"#minecraft:is_taiga"
+	],
 	"weight": 6,
-	"group_size": [1, 3],
+	"group_size": [
+		1,
+		3
+	],
 	"worldgen_only": false,
 	"health": 50,
 	"attack": 8,
@@ -13,10 +18,14 @@
 	"neutral": true,
 	"texture": "menagerie:textures/entity/grizzly/grizzly.png",
 	"diet": {
-		"hunts": ["minecraft:salmon"],
+		"hunts": [
+			"minecraft:salmon"
+		],
 		"scavenges": false
 	},
 	"special": {
 		"berry_raiding": true
-	}
+	},
+	"cage_tier": 2,
+	"guide_blurb": "Fish thief, berry burglar, terrible alarm clock."
 }

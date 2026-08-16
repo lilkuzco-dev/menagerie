@@ -108,3 +108,31 @@ deliberate — Fabric bakes biome spawn lists once per server run.
 - **In-house `GrabHold` extraction**: the Phase 1 crocodile grab was refactored into
   a shared class now also driving the python constrict — one code path, regression-
   tested on both.
+
+---
+
+## Phase 3 appendix (2026-08-15)
+
+- **Vanilla `Bucketable`/`MobBucketItem`** (mapped sources): the capture-with-data
+  idiom. We went further than the bucket (which saves a curated subset): the cage
+  saves the FULL entity via `Entity.save(TagValueOutput)` and restores with
+  `EntityType.loadEntityRecursive(tag, level, EntitySpawnRequest, processor)` —
+  species, health, name, owner and tame state all survive (verified live).
+- **Untamed Wilds cage-trap concept** (GPL, patterns only, from Phase 1 findings):
+  capture item semantics + NBT persistence idea only; our implementation is a
+  block-entity + BLOCK_ENTITY_DATA component ride. Key 26.2 discovery: loot
+  `copy_components` only copies components a block entity EXPORTS via
+  `collectImplicitComponents` — raw `saveAdditional` data is invisible to it.
+- **Alex's Mobs animal dictionary** (all-rights-reserved, concept only): discovery
+  gating idea. Ours is a server-authoritative SavedData set + a payload-driven
+  screen whose entries are generated from the live species registry — no
+  hand-written entry text anywhere.
+- **In-house Warfront v0.2 client/network idioms** (ours): 26.2 `Screen.
+  extractRenderState(GuiGraphicsExtractor,...)` drawing, `PayloadTypeRegistry`
+  streams, SavedData codec registration.
+- **Warfront compat decision**: implemented WITHOUT any compile or classload
+  dependency — soldiers are identified by entity id string `warfront:soldier`
+  via the vanilla Mob API, gated behind `FabricLoader.isModLoaded`. Full soldier
+  deflection worked outside-in (idle soldiers pathed out of live territories in
+  testing), so the API-only fallback wasn't needed. `MenagerieTerritories` is a
+  public API any mod can query; `TERRITORY_ACTIVE` is the fabric-style event.

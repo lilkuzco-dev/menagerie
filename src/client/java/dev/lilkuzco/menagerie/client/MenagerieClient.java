@@ -43,6 +43,11 @@ public class MenagerieClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
+				dev.lilkuzco.menagerie.guide.MenagerieNet.GuideS2C.TYPE, (payload, context) ->
+						context.client().execute(() ->
+								context.client().gui.setScreen(new GuideScreen(payload))));
+
 		ModelLayerRegistry.registerModelLayer(GORILLA, GorillaModel::createBodyLayer);
 		ModelLayerRegistry.registerModelLayer(GORILLA_BABY, () -> GorillaModel.createBodyLayer().apply(BABY));
 		ModelLayerRegistry.registerModelLayer(CROCODILE, CrocodileModel::createBodyLayer);

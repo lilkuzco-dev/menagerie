@@ -135,6 +135,10 @@ public class HippoEntity extends SpeciesMob {
 		if (territoryCenter == null) {
 			claimTerritory();
 		}
+		// publish the territory to the public API (Warfront crossover & friends)
+		if (territoryCenter != null && !isBaby() && tickCount % 100 == 0) {
+			dev.lilkuzco.menagerie.MenagerieTerritories.refresh(level, territoryCenter, territoryRadius(), "hippo");
+		}
 		if (isBaby()) {
 			return;
 		}

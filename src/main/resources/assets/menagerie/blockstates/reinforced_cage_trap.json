@@ -1,0 +1,6 @@
+{
+	"variants": {
+		"closed=false": {"model": "menagerie:block/reinforced_cage_trap"},
+		"closed=true": {"model": "menagerie:block/reinforced_cage_trap_closed"}
+	}
+}

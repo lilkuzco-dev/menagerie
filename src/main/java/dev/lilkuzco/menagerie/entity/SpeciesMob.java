@@ -203,9 +203,38 @@ public abstract class SpeciesMob extends TamableAnimal {
 		return species != null && !species.tameItem().isEmpty();
 	}
 
-	/** Chance a single feeding tames (gorilla spec: 1 in 3). */
-	protected int tameChanceIn() {
-		return 3;
+	/** Chance a single feeding tames (gorilla spec: 1 in 3; doubled while content). */
+	protected float tameChance() {
+		return 1.0F / 3.0F;
+	}
+
+	// ---------- forage / contentment (generic; driven by the species "forage" block) ----------
+	private long contentUntil;
+	private boolean forageGoalAttached;
+
+	/** A meal just happened (block forage or player feeding). Subclasses may spread it. */
+	public void onForaged() {
+		Species species = species();
+		int minutes = species != null && species.forage() != null ? species.forage().contentMinutes() : 5;
+		this.contentUntil = level().getGameTime() + minutes * 1200L;
+	}
+
+	public boolean isContent() {
+		return level().getGameTime() < contentUntil;
+	}
+
+	@Override
+	protected void customServerAiStep(net.minecraft.server.level.ServerLevel level) {
+		super.customServerAiStep(level);
+		// species with a forage block get the goal attached lazily (species is data,
+		// unknown at registerGoals time) — zero Java for future foraging animals
+		if (!forageGoalAttached) {
+			forageGoalAttached = true;
+			Species species = species();
+			if (species != null && species.forage() != null) {
+				this.goalSelector.addGoal(6, new dev.lilkuzco.menagerie.entity.ai.ForageGoal(this));
+			}
+		}
 	}
 
 	@Override
@@ -214,7 +243,11 @@ public abstract class SpeciesMob extends TamableAnimal {
 		if (!isTame() && tamable() && isTameItem(stack)) {
 			if (!level().isClientSide()) {
 				usePlayerItem(player, hand, stack);
-				if (getRandom().nextInt(tameChanceIn()) == 0) {
+				// roll with the CURRENT mood, then count this feeding as a meal —
+				// so the first melon is 1/3 and follow-ups within the window are 2/3
+				boolean tamed = getRandom().nextFloat() < tameChance();
+				onForaged();
+				if (tamed) {
 					tame(player);
 					setOrderedToSit(false);
 					level().broadcastEntityEvent(this, (byte) 7);
@@ -257,11 +290,13 @@ public abstract class SpeciesMob extends TamableAnimal {
 	protected void addAdditionalSaveData(ValueOutput output) {
 		super.addAdditionalSaveData(output);
 		output.putString("menagerie_species", getSpeciesName());
+		output.putLong("menagerie_content_until", contentUntil);
 	}
 
 	@Override
 	protected void readAdditionalSaveData(ValueInput input) {
 		super.readAdditionalSaveData(input);
+		contentUntil = input.getLongOr("menagerie_content_until", 0L);
 		String name = input.getStringOr("menagerie_species", "");
 		this.entityData.set(SPECIES, name);
 		// re-apply attributes from (possibly retuned) JSON, keep current health fraction

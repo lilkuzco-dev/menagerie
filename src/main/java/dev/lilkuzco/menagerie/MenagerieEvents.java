@@ -27,6 +27,37 @@ public final class MenagerieEvents {
 	private static final double CARRION_PULL_RANGE = 48.0;
 
 	public static void init() {
+		// Field Guide discovery: standing within 8 blocks of a living specimen documents it
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (server.getTickCount() % 20 != 0) {
+				return;
+			}
+			dev.lilkuzco.menagerie.guide.MenagerieDiscoveries discoveries =
+					dev.lilkuzco.menagerie.guide.MenagerieDiscoveries.get(server);
+			for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
+				for (dev.lilkuzco.menagerie.entity.SpeciesMob mob :
+						player.level().getEntitiesOfClass(dev.lilkuzco.menagerie.entity.SpeciesMob.class,
+								player.getBoundingBox().inflate(8.0))) {
+					dev.lilkuzco.menagerie.data.Species species = mob.species();
+					if (species == null || !mob.isAlive()) {
+						continue;
+					}
+					String key = species.entityId() + "|" + species.name();
+					if (discoveries.discover(player.getUUID(), key)) {
+						String speciesName = species.name().substring(0, 1).toUpperCase() + species.name().substring(1);
+						net.minecraft.network.chat.Component name = net.minecraft.network.chat.Component
+								.literal(speciesName + " ").append(net.minecraft.network.chat.Component.translatable(
+										"entity.menagerie." + net.minecraft.resources.Identifier.parse(species.entityId()).getPath()));
+						player.sendSystemMessage(net.minecraft.network.chat.Component
+								.translatable("guide.menagerie.discovered", name), true);
+						player.level().playSound(null, player.blockPosition(),
+								net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP,
+								net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.4F);
+					}
+				}
+			}
+		});
+
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (entity.level() instanceof ServerLevel level && !(entity instanceof VultureEntity)) {
 				synchronized (PENDING) {

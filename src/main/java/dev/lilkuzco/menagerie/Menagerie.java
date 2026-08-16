@@ -18,9 +18,15 @@ public class Menagerie implements ModInitializer {
 		dev.lilkuzco.menagerie.data.SpeciesRegistry.init();
 		MenagerieSounds.init();
 		dev.lilkuzco.menagerie.entity.MenagerieEntities.init();
+		dev.lilkuzco.menagerie.block.MenagerieBlocks.init();
+		MenagerieItems.init();
+		dev.lilkuzco.menagerie.guide.MenagerieNet.init();
 		MenagerieSpawns.init();
 		MenagerieCommands.init();
 		MenagerieEvents.init();
+		if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("warfront")) {
+			dev.lilkuzco.menagerie.compat.warfront.WarfrontCompat.init();
+		}
 		LOGGER.info("Menagerie initialized");
 	}
 }

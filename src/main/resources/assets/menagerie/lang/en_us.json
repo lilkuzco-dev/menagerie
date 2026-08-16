@@ -42,5 +42,14 @@
 	"subtitles.menagerie.snake_rattle": "Snake rattles",
 	"subtitles.menagerie.snake_strike": "Snake strikes",
 	"subtitles.menagerie.snake_hurt": "Snake hurts",
-	"subtitles.menagerie.snake_death": "Snake dies"
+	"subtitles.menagerie.snake_death": "Snake dies",
+	"block.menagerie.cage_trap": "Cage Trap",
+	"block.menagerie.reinforced_cage_trap": "Reinforced Cage Trap",
+	"item.menagerie.cage_trap.empty": "Empty - bait with an animal's favorite food",
+	"item.menagerie.cage_trap.occupied": "Contains: %s",
+	"item.menagerie.field_guide": "Field Guide",
+	"guide.menagerie.title": "Field Guide",
+	"guide.menagerie.progress": "Documented: %s/%s",
+	"guide.menagerie.discovered": "New species documented: %s",
+	"guide.menagerie.undiscovered": "Undocumented. Get within 8 blocks of a living specimen to add it to the guide."
 }

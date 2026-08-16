@@ -1,10 +1,15 @@
 {
-	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players — unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly.",
+	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players \u2014 unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier.",
 	"entity": "menagerie:grizzly",
 	"species": "black",
-	"biomes": ["#minecraft:is_forest"],
+	"biomes": [
+		"#minecraft:is_forest"
+	],
 	"weight": 5,
-	"group_size": [1, 3],
+	"group_size": [
+		1,
+		3
+	],
 	"worldgen_only": false,
 	"health": 40,
 	"attack": 6,
@@ -14,11 +19,15 @@
 	"neutral": true,
 	"texture": "menagerie:textures/entity/grizzly/black.png",
 	"diet": {
-		"hunts": ["minecraft:salmon"],
+		"hunts": [
+			"minecraft:salmon"
+		],
 		"scavenges": false
 	},
 	"special": {
 		"berry_raiding": true,
 		"timid": true
-	}
+	},
+	"cage_tier": 2,
+	"guide_blurb": "Shy, unless you find the cubs first."
 }

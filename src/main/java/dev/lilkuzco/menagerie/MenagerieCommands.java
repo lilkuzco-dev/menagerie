@@ -55,6 +55,7 @@ public final class MenagerieCommands {
 					+ (mob instanceof dev.lilkuzco.menagerie.entity.SnakeEntity snake && snake.isRattling() ? "|rattling" : "")
 					+ (mob.isBaby() ? "|baby" : "")
 					+ (mob.getTarget() != null ? "|angry" : "")
+					+ (mob.isContent() ? "|content" : "")
 					+ (mob.isTame() ? "|tame" : "")
 					+ (mob.isOrderedToSit() ? "|sitting" : "")
 					+ (mob.isPassenger() ? "|riding" : "");
@@ -67,6 +68,12 @@ public final class MenagerieCommands {
 				source.sendSuccess(() -> Component.literal("census " + key + " x" + count), false));
 		int registered = SpeciesRegistry.all().values().stream().mapToInt(java.util.List::size).sum();
 		source.sendSuccess(() -> Component.literal("registry: " + registered + " species loaded"), false);
+		if (source.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
+			int documented = dev.lilkuzco.menagerie.guide.MenagerieDiscoveries
+					.get(source.getServer()).count(player.getUUID());
+			source.sendSuccess(() -> Component.literal("guide: " + documented + "/" + registered
+					+ " documented"), false);
+		}
 		return counts.values().stream().mapToInt(Integer::intValue).sum();
 	}
 

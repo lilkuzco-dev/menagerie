@@ -1,10 +1,16 @@
 {
-	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river — registry proves itself again.",
+	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river \u2014 registry proves itself again. Phase 3: breed_item melon (also the cage bait); cage_tier 2.",
 	"entity": "menagerie:hippo",
 	"species": "swamp",
-	"biomes": ["minecraft:swamp", "minecraft:mangrove_swamp"],
+	"biomes": [
+		"minecraft:swamp",
+		"minecraft:mangrove_swamp"
+	],
 	"weight": 5,
-	"group_size": [2, 3],
+	"group_size": [
+		2,
+		3
+	],
 	"worldgen_only": false,
 	"health": 55,
 	"attack": 10,
@@ -18,5 +24,8 @@
 		"anchor": "water",
 		"aggro_inside": true
 	},
-	"special": {}
+	"special": {},
+	"cage_tier": 2,
+	"guide_blurb": "The murk has a landlord.",
+	"breed_item": "minecraft:melon_slice"
 }
