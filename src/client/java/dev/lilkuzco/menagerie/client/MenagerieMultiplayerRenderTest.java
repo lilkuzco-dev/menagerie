@@ -172,7 +172,10 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 					failures.addAll(verify(context, row));
 				}
 
+				dumpSizeReference(server);
+				failures.addAll(dumpModelExtents(context, server));
 				failures.addAll(habitatCensus(server));
+				failures.addAll(sizeComparison(context, server, connection));
 				failures.addAll(skinSweep(context, server, connection));
 				failures.addAll(babySizeCalibration(context, server, connection));
 
@@ -182,6 +185,194 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Measure the actual MESH extents and hold them against the hitbox.
+	 *
+	 * <p>Asserting {@code hitbox == builder dimensions x SCALE} proves the hitbox tracks
+	 * the scale attribute, but it says nothing about whether the drawn model fills that
+	 * box. A mesh far smaller than its hitbox is precisely the phantom air-hit: you swing
+	 * at empty space and connect, or you cannot walk past an animal that looks small
+	 * enough to pass. Only a side-by-side screenshot exposed it, so it gets measured.
+	 */
+	private static List<String> dumpModelExtents(ClientGameTestContext context,
+			TestDedicatedServerContext server) {
+		var layers = new java.util.LinkedHashMap<String, net.minecraft.client.model.geom.ModelLayerLocation>();
+		layers.put("gorilla", MenagerieClient.GORILLA);
+		layers.put("crocodile", MenagerieClient.CROCODILE);
+		layers.put("tortoise", MenagerieClient.TORTOISE);
+		layers.put("leopard", MenagerieClient.LEOPARD);
+		layers.put("hippo", MenagerieClient.HIPPO);
+		layers.put("grizzly", MenagerieClient.GRIZZLY);
+		layers.put("vulture", MenagerieClient.VULTURE);
+		layers.put("lion", MenagerieClient.LION);
+		layers.put("snake", MenagerieClient.SNAKE);
+		return context.computeOnClient(mc -> {
+			System.out.println("[menagerie-size] MESH EXTENTS vs HITBOX (blocks, at scale 1.0)");
+			List<String> bad = new ArrayList<>();
+			layers.forEach((name, loc) -> {
+				var part = mc.getEntityModels().bakeLayer(loc);
+				float[] lo = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
+				float[] hi = {-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+				part.getExtentsForGui(new com.mojang.blaze3d.vertex.PoseStack(), v -> {
+					lo[0] = Math.min(lo[0], v.x()); hi[0] = Math.max(hi[0], v.x());
+					lo[1] = Math.min(lo[1], v.y()); hi[1] = Math.max(hi[1], v.y());
+					lo[2] = Math.min(lo[2], v.z()); hi[2] = Math.max(hi[2], v.z());
+				});
+				float mw = hi[0] - lo[0], mh = hi[1] - lo[1], ml = hi[2] - lo[2];
+				var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+						.getValue(net.minecraft.resources.Identifier
+								.fromNamespaceAndPath("menagerie", name));
+				var d = type.getDimensions();
+				double fillW = 100.0 * Math.max(mw, ml) / d.width();
+				double fillH = 100.0 * mh / d.height();
+				System.out.printf("[menagerie-size]   %-10s mesh %.2fw x %.2fh x %.2f long"
+								+ "  | hitbox %.2f x %.2f  | fill %.0f%% w, %.0f%% h%n",
+						name, mw, mh, ml, d.width(), d.height(), fillW, fillH);
+				// HEIGHT is the one that must track: a mesh short of its box is the phantom
+				// air-hit (swing at nothing, connect), a mesh taller than its box pokes out
+				// of the thing you can actually hit. Width is deliberately only reported:
+				// a square footprint can never fit an elongated body or a spread wingspan.
+				if (fillH < 80.0 && MESH_FILL_EXEMPT.containsKey(name)) {
+					System.out.printf("[menagerie-size]     ^ exempt: %s%n",
+							MESH_FILL_EXEMPT.get(name));
+				} else if (fillH < 80.0) {
+					bad.add(String.format("%s mesh fills only %.0f%% of its hitbox height "
+							+ "(%.2f tall in a %.2f box) — that empty air is a phantom hit",
+							name, fillH, mh, d.height()));
+				} else if (fillH > 125.0) {
+					bad.add(String.format("%s mesh is %.0f%% of its hitbox height (%.2f tall "
+							+ "in a %.2f box) — the model pokes out of what you can hit",
+							name, fillH, mh, d.height()));
+				}
+			});
+			return bad;
+		});
+	}
+
+	/**
+	 * Animals whose mesh genuinely cannot fill a workable hitbox, with the reason.
+	 * Listed explicitly so the exemption is visible in the log rather than a silent pass;
+	 * anything not named here must fill its box.
+	 */
+	private static final java.util.Map<String, String> MESH_FILL_EXEMPT = java.util.Map.of(
+			"snake", "the mesh is 0.13 blocks thin — flatter than any vanilla mob. 0.30 is "
+					+ "the practical floor for an entity that still has to be clickable and "
+					+ "pathfind (vanilla silverfish and endermite are both 0.30 tall). "
+					+ "Closing this gap means thickening the mesh, not shrinking the box.");
+
+	/** Each animal's nearest vanilla yardstick, for the side-by-side scale shots. */
+	private static final java.util.Map<String, String> ANCHOR = java.util.Map.of(
+			"hippo", "ravager",
+			"crocodile", "ravager",
+			"gorilla", "polar_bear",
+			"grizzly", "polar_bear",
+			"lion", "polar_bear",
+			"leopard", "ocelot",
+			"tortoise", "turtle",
+			"snake", "wolf",
+			"vulture", "wolf");
+
+	/**
+	 * Stand every species, adult and baby, beside its vanilla anchor and photograph it —
+	 * then prove the HITBOX moved with the model.
+	 *
+	 * <p>{@code Attributes.SCALE} multiplies the rendered model and
+	 * {@code getDefaultDimensions()} alike, so the two cannot drift apart by construction.
+	 * This asserts it anyway, per animal: the live bounding box must equal
+	 * {@code type dimensions x age scale x SCALE}. A mismatch is exactly the phantom
+	 * air-hit / walk-through-it failure — a model drawn at one size and struck at another.
+	 */
+	private static List<String> sizeComparison(ClientGameTestContext context,
+			TestDedicatedServerContext server, TestDedicatedServerConnection connection) {
+		List<String> problems = new ArrayList<>();
+		int shot = 0;
+		for (var entry : new java.util.TreeMap<>(SpeciesRegistry.all()).entrySet()) {
+			String entity = entry.getKey().split(":")[1];
+			String anchor = ANCHOR.getOrDefault(entity, "cow");
+			for (var sp : entry.getValue()) {
+				server.runCommand("kill @e[type=!minecraft:player]");
+				context.waitTicks(30);
+				server.runCommand("execute at @p run summon minecraft:" + anchor
+						+ " ~-3.5 ~ ~7 {NoAI:1b}");
+				server.runCommand("execute at @p run summon menagerie:" + entity
+						+ " ~0 ~ ~7 {NoAI:1b,Rotation:[180f,0f],menagerie_species:\""
+						+ sp.name() + "\"}");
+				server.runCommand("execute at @p run summon menagerie:" + entity
+						+ " ~3.5 ~ ~7 {NoAI:1b,Rotation:[180f,0f],menagerie_species:\""
+						+ sp.name() + "\",Age:-24000}");
+				connection.waitForClientboundPackets();
+				context.waitTicks(40);
+				context.takeScreenshot(String.format("mp_size_%02d_%s_%s_vs_%s",
+						shot++, entity, sp.name(), anchor));
+
+				problems.addAll(context.computeOnClient(mc -> {
+					List<String> bad = new ArrayList<>();
+					for (var e : mc.level.entitiesForRendering()) {
+						if (!(e instanceof SpeciesMob mob)) {
+							continue;
+						}
+						var dim = mob.getType().getDimensions();
+						float expW = dim.width() * mob.getAgeScale() * mob.getScale();
+						float expH = dim.height() * mob.getAgeScale() * mob.getScale();
+						String id = mob.entityId() + "|" + mob.getSpeciesName()
+								+ (mob.isBaby() ? "|baby" : "");
+						if (Math.abs(mob.getBbWidth() - expW) > 0.01f
+								|| Math.abs(mob.getBbHeight() - expH) > 0.01f) {
+							bad.add(String.format("%s hitbox %.2fx%.2f but model scale implies "
+											+ "%.2fx%.2f — model and hitbox have desynced",
+									id, mob.getBbWidth(), mob.getBbHeight(), expW, expH));
+						} else {
+							System.out.printf("[menagerie-size]   %-24s %.2f x %.2f  (vs %s)%n",
+									id, mob.getBbWidth(), mob.getBbHeight(), anchor);
+						}
+					}
+					return bad;
+				}));
+			}
+		}
+		System.out.println("[menagerie-size] size comparison: "
+				+ (problems.isEmpty() ? "all hitboxes track their model scale" : problems.size() + " mismatch(es)"));
+		return problems;
+	}
+
+	/**
+	 * Print vanilla yardstick hitboxes next to ours, straight from the live registries.
+	 *
+	 * <p>Sizing an animal "about right" is guesswork unless it is anchored to something
+	 * measurable, and the player (0.6 x 1.8) is a poor yardstick — a thin humanoid tells
+	 * you nothing about how bulky a hippo should read. These are the reference mobs, read
+	 * from the game rather than from memory. Menagerie's effective size is the entity
+	 * builder's dimensions multiplied by the species SCALE attribute, so both are shown.
+	 */
+	private static void dumpSizeReference(TestDedicatedServerContext server) {
+		server.runOnServer(mc -> {
+			System.out.println("[menagerie-size] VANILLA REFERENCE (width x height, blocks)");
+			// looked up by id, not by constant: the EntityType constants move between
+			// versions and this dump must survive that
+			for (String n : List.of("chicken", "ocelot", "wolf", "turtle", "pig", "sheep",
+					"cow", "horse", "polar_bear", "ravager", "hoglin", "player")) {
+				var t = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+						.getValue(net.minecraft.resources.Identifier
+								.fromNamespaceAndPath("minecraft", n));
+				var d = t.getDimensions();
+				System.out.printf("[menagerie-size]   %-12s %.2f x %.2f%n", n, d.width(), d.height());
+			}
+			System.out.println("[menagerie-size] MENAGERIE (builder dims, then x species scale)");
+			for (var e : new java.util.TreeMap<>(SpeciesRegistry.all()).entrySet()) {
+				var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+						.getValue(net.minecraft.resources.Identifier.parse(e.getKey()));
+				var d = type.getDimensions();
+				for (var sp : e.getValue()) {
+					System.out.printf("[menagerie-size]   %-22s builder %.2f x %.2f  scale %.2f"
+									+ "  -> %.2f x %.2f%n",
+							e.getKey().split(":")[1] + "|" + sp.name(),
+							d.width(), d.height(), sp.scale(),
+							d.width() * sp.scale(), d.height() * sp.scale());
+				}
+			}
+		});
 	}
 
 	/**

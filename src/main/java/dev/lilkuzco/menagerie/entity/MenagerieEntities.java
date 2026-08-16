@@ -16,39 +16,39 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public final class MenagerieEntities {
 	public static final EntityType<GorillaEntity> GORILLA = register("gorilla",
 			EntityType.Builder.of(GorillaEntity::new, MobCategory.CREATURE)
-					.sized(1.1F, 1.4F).eyeHeight(1.2F).clientTrackingRange(10));
+					.sized(1.35F, 1.7F).eyeHeight(1.45F).clientTrackingRange(10));
 
 	public static final EntityType<CrocodileEntity> CROCODILE = register("crocodile",
 			EntityType.Builder.of(CrocodileEntity::new, MobCategory.CREATURE)
-					.sized(1.5F, 0.6F).eyeHeight(0.45F).clientTrackingRange(10));
+					.sized(2.0F, 0.4F).eyeHeight(0.32F).clientTrackingRange(10));
 
 	public static final EntityType<TortoiseEntity> TORTOISE = register("tortoise",
 			EntityType.Builder.of(TortoiseEntity::new, MobCategory.CREATURE)
-					.sized(1.0F, 0.6F).eyeHeight(0.45F).clientTrackingRange(10));
+					.sized(0.85F, 0.75F).eyeHeight(0.55F).clientTrackingRange(10));
 
 	public static final EntityType<LeopardEntity> LEOPARD = register("leopard",
 			EntityType.Builder.of(LeopardEntity::new, MobCategory.CREATURE)
-					.sized(0.9F, 0.9F).eyeHeight(0.75F).clientTrackingRange(10));
+					.sized(1.25F, 1.0F).eyeHeight(0.85F).clientTrackingRange(10));
 
 	public static final EntityType<HippoEntity> HIPPO = register("hippo",
 			EntityType.Builder.of(HippoEntity::new, MobCategory.CREATURE)
-					.sized(1.9F, 1.6F).eyeHeight(1.3F).clientTrackingRange(10));
+					.sized(1.3F, 1.06F).eyeHeight(0.9F).clientTrackingRange(10));
 
 	public static final EntityType<GrizzlyEntity> GRIZZLY = register("grizzly",
 			EntityType.Builder.of(GrizzlyEntity::new, MobCategory.CREATURE)
-					.sized(1.4F, 1.5F).eyeHeight(1.2F).clientTrackingRange(10));
+					.sized(1.25F, 1.25F).eyeHeight(1.05F).clientTrackingRange(10));
 
 	public static final EntityType<VultureEntity> VULTURE = register("vulture",
 			EntityType.Builder.of(VultureEntity::new, MobCategory.CREATURE)
-					.sized(0.9F, 0.7F).eyeHeight(0.5F).clientTrackingRange(12));
+					.sized(1.05F, 1.0F).eyeHeight(0.75F).clientTrackingRange(12));
 
 	public static final EntityType<LionEntity> LION = register("lion",
 			EntityType.Builder.of(LionEntity::new, MobCategory.CREATURE)
-					.sized(1.3F, 1.3F).eyeHeight(1.1F).clientTrackingRange(10));
+					.sized(1.6F, 1.1F).eyeHeight(0.95F).clientTrackingRange(10));
 
 	public static final EntityType<SnakeEntity> SNAKE = register("snake",
 			EntityType.Builder.of(SnakeEntity::new, MobCategory.CREATURE)
-					.sized(0.8F, 0.35F).eyeHeight(0.25F).clientTrackingRange(8));
+					.sized(0.9F, 0.3F).eyeHeight(0.22F).clientTrackingRange(8));
 
 	private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
 		ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, Menagerie.id(name));

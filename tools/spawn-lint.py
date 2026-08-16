@@ -286,6 +286,16 @@ def main():
                                 f"BabyModelTransform already halves the body, so values "
                                 f"below 1.0 stack a second shrink (1.0 = vanilla baby)")
 
+        # S11 — size sanity. Attributes.SCALE multiplies the hitbox as well as the model,
+        # so a runaway value makes an animal unspawnable (no headroom) or untouchable.
+        scale = doc.get("size_scale", doc.get("scale", 1.0))
+        if not (0.3 <= scale <= 3.0):
+            lint.fail("S11", f"{name}: scale {scale} outside 0.3..3.0 — SCALE drives the "
+                             f"hitbox too, so extremes break spawning or collision")
+        if "size_scale" in doc and "scale" in doc:
+            lint.fail("S11", f"{name}: declares BOTH size_scale and scale; size_scale "
+                             f"silently wins and the other value is a lie")
+
         # S8
         for e in excludes:
             if not isinstance(e, str) or not e:

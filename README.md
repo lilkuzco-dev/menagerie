@@ -119,6 +119,30 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.6 — Size pass (2026-08-16)
+
+Every animal resized against **measured** vanilla hitboxes (cow 0.90x1.40, horse
+1.40x1.60, polar bear 1.40x1.40, ravager 1.95x2.20, wolf 0.60x0.85, turtle 1.20x0.40,
+ocelot 0.60x0.70, chicken 0.40x0.70) rather than by eye.
+
+- **Hitboxes never matched their models.** Measuring the baked meshes showed the hippo
+  was a 1.06-block-tall model inside a 1.60-block box — a third of it empty air you
+  could swing at and hit. The gorilla had the reverse fault, a mesh *larger* than its
+  hitbox, so you could walk into its visible body. Entity dimensions now match the
+  measured mesh, and `size_scale` multiplies model and hitbox together from there.
+- The hippo is now genuinely imposing: **2.27 x 1.85**, ravager-class bulk and lower —
+  2.5x a cow's width, and finally taller than the player.
+- Gorilla 1.35 x 1.70 (polar-bear height, narrower), grizzly 1.44 x 1.44 (at the polar
+  bear), lion 1.84 x 1.27, leopard 1.25 x 1.00 (between ocelot and bear), crocodile
+  2.00 x 0.40 (long and low), tortoise 1.11 x 0.98, vulture 0.89 x 0.85, snake
+  0.99 x 0.33.
+- **New mesh-fill validator** in the render battery: every model must fill 80-125% of
+  its hitbox height, or the build fails. The snake is the one documented exemption —
+  its mesh is 0.13 thin, and 0.30 is the floor for an entity that still has to be
+  clickable and pathfind.
+- Babies stay proportional (adult scale x vanilla baby transform), and every species is
+  photographed beside its vanilla anchor in `build/run-gametest/screenshots/`.
+
 ### 0.4.5 — Density restored (2026-08-16)
 
 Texture fix confirmed in-world; this pairs it with the spawn-density correction.

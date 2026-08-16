@@ -1,5 +1,5 @@
 {
-	"_tuning_notes": "Jungle python: no venom \u2014 special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal \u2014 its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-1, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Jungle python: no venom — special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal — its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-1, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. SIZE PASS 0.4.6: scale set against MEASURED vanilla hitboxes rather than by eye (cow 0.90x1.40, horse 1.40x1.60, polar bear 1.40x1.40, ravager 1.95x2.20, wolf 0.60x0.85, turtle 1.20x0.40, ocelot 0.60x0.70, chicken 0.40x0.70). Attributes.SCALE is uniform and multiplies the MODEL and the HITBOX together, so this is the one lever that cannot desync them. 1.87x wolf width at 0.58x its height. NOTE: aspect is mesh-limited; uniform scale cannot flatten it further. SIZE PASS revised: the first attempt scaled an already-wrong box. Measuring the baked meshes showed the hitboxes never matched the models — the hippo mesh was 1.06 blocks tall inside a 1.60 box (66% fill, a third of it empty air), while the gorilla mesh was LARGER than its hitbox (121%). Builder dimensions in MenagerieEntities now match the measured mesh, and this scale multiplies model and hitbox together from there, so the drawn animal fills the box it is struck in.",
 	"entity": "menagerie:snake",
 	"species": "python",
 	"biomes": [
@@ -13,7 +13,7 @@
 	"health": 10,
 	"attack": 2,
 	"speed": 0.25,
-	"size_scale": 1.15,
+	"size_scale": 1.1,
 	"neutral": true,
 	"texture": "menagerie:textures/entity/snake/python.png",
 	"special": {

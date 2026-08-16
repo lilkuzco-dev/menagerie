@@ -38,7 +38,7 @@
 	"biomes": [
 		"#minecraft:is_badlands"
 	],
-	"scale": 1.05,
+	"scale": 1.22,
 	"texture": "menagerie:textures/entity/lion/body_8.png",
 	"textures": [
 		"menagerie:textures/entity/lion/body_8.png",
@@ -50,5 +50,5 @@
 		"menagerie:textures/entity/lion/body_14.png"
 	],
 	"guide_blurb": "Bigger, darker, and a long way from the grass.",
-	"_tuning_notes": "Barbary-type lion for badlands: the darker half of the source texture set, slightly larger and tougher. Same entity class and pride logic as the savanna lion — this is the registry doing the work, not Java. RARITY: tier 'rare', pride 3-4, nearby_cap 6. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions."
+	"_tuning_notes": "Barbary-type lion for badlands: the darker half of the source texture set, slightly larger and tougher. Same entity class and pride logic as the savanna lion — this is the registry doing the work, not Java. RARITY: tier 'rare', pride 3-4, nearby_cap 6. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions. SIZE PASS 0.4.6: scale set against MEASURED vanilla hitboxes rather than by eye (cow 0.90x1.40, horse 1.40x1.60, polar bear 1.40x1.40, ravager 1.95x2.20, wolf 0.60x0.85, turtle 1.20x0.40, ocelot 0.60x0.70, chicken 0.40x0.70). Attributes.SCALE is uniform and multiplies the MODEL and the HITBOX together, so this is the one lever that cannot desync them. the larger subspecies, level with a polar bear. SIZE PASS revised: the first attempt scaled an already-wrong box. Measuring the baked meshes showed the hitboxes never matched the models — the hippo mesh was 1.06 blocks tall inside a 1.60 box (66% fill, a third of it empty air), while the gorilla mesh was LARGER than its hitbox (121%). Builder dimensions in MenagerieEntities now match the measured mesh, and this scale multiplies model and hitbox together from there, so the drawn animal fills the box it is struck in."
 }
