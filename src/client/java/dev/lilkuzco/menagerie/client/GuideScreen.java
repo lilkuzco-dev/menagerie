@@ -73,10 +73,9 @@ public class GuideScreen extends Screen {
 	}
 
 	private static Component displayName(MenagerieNet.GuideEntry entry) {
-		String species = entry.species().isEmpty() ? "" :
-				Character.toUpperCase(entry.species().charAt(0)) + entry.species().substring(1) + " ";
-		return Component.literal(species)
-				.append(Component.translatable("entity.menagerie." + Identifier.parse(entry.entityId()).getPath()));
+		String path = Identifier.parse(entry.entityId()).getPath();
+		return Component.literal(dev.lilkuzco.menagerie.data.Species.namePrefix(entry.species(), path))
+				.append(Component.translatable("entity.menagerie." + path));
 	}
 
 	private static Identifier icon(MenagerieNet.GuideEntry entry) {

@@ -3,6 +3,7 @@ package dev.lilkuzco.menagerie.block;
 import dev.lilkuzco.menagerie.Menagerie;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.entity.SpeciesMob;
+import dev.lilkuzco.menagerie.entity.VultureEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -115,8 +116,23 @@ public class CageTrapBlockEntity extends BlockEntity {
 		if (baitStr.equals(species.tameItem()) || baitStr.equals(species.breedItem())) {
 			return true;
 		}
+		// breeding items are bait too. This is not optional politeness: species that moved
+		// their breed_item into the "breeding" block have an empty breedItem(), and without
+		// this a hippo would have no bait item in the world at all.
+		if (species.breeding() != null && species.breeding().items().contains(baitStr)) {
+			return true;
+		}
+		if (species.diet() == null) {
+			return false;
+		}
+		// a scavenger is lured by carrion, using the same table it strips off the ground —
+		// without this the vulture has a cage_tier but no bait that exists, so its cage
+		// could never be sprung
+		if (species.diet().scavenges() && VultureEntity.CARRION.contains(bait.getItem())) {
+			return true;
+		}
 		// diet lure: hunted entity ids map onto their item form (minecraft:salmon etc.)
-		return species.diet() != null && species.diet().hunts().contains(baitStr);
+		return species.diet().hunts().contains(baitStr);
 	}
 
 	private void capture(ServerLevel level, BlockPos pos, BlockState state, SpeciesMob mob) {

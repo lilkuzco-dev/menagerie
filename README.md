@@ -119,6 +119,29 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.1 — Post-release audit (2026-08-16)
+
+No new content. 0.4.0 was audited after shipping and every item here was a defect in the
+released jar; two were regressions caused by 0.4.0's own breeding refactor.
+
+- **Cage traps worked again for the animals that lost their bait.** Moving `breed_item`
+  into the new `breeding` block left `baitMatches` reading a field that was now empty, so
+  the hippo and the savanna tortoise had **no valid bait in the world at all**. Bait now
+  reads the breeding block, and scavengers are lured by the carrion table they already
+  eat from — which is what the vulture had always been missing, despite having a
+  `cage_tier`.
+- **`baby_scale` actually applies.** Species attributes were only applied at spawn, so
+  babies wore adult proportions until they grew up.
+- **The Field Guide shows breeding again**, and no longer says "Leopard Leopard" — the
+  guide, the discovery toast and the cage label now share one naming helper.
+- **Breeding actually happens.** `BreedGoal` sat below every stroll goal, so it kept
+  losing the MOVE flag to wandering. Lion, leopard and crocodile now demonstrably breed.
+- **The lion roars.** Eight roar sounds were imported and wired up in 0.4.0 but nothing
+  ever played them.
+- **Rarity config is published on the main thread** instead of from a reload worker.
+- **The nearby-species cap is now proven**, not just implemented: `/menagerie spawntest`
+  runs the real spawn predicate on demand — 7 nearby → 100% allowed, 8 (the cap) → 0%.
+
 ### 0.4.0 — Renaissance Update, Wave 1 (2026-08-16)
 - **Lion.** A new marquee animal built from the public-domain Animal Garden set: 34-part
   model, 35 animations, 15 fur variants, separate animated eyes, 14 recorded sounds.

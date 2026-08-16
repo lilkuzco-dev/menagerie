@@ -224,7 +224,15 @@ public abstract class SpeciesMob extends TamableAnimal {
 		return !overNearbyCap(type, level, pos, species);
 	}
 
-	/** @return true when there are already enough of this animal near {@code pos}. */
+	/**
+	 * @return true when there are already enough of this animal near {@code pos}.
+	 *
+	 * Only applies to NATURAL spawns: chunk generation passes a WorldGenRegion rather than
+	 * a ServerLevel, and neighbouring chunks may not exist yet, so counting there would be
+	 * meaningless. That is the right split anyway — worldgen seeds a population once,
+	 * while it is repeated natural spawning into a never-despawning category that
+	 * compounds, and that is exactly the path this gates.
+	 */
 	private static boolean overNearbyCap(EntityType<? extends Mob> type, LevelAccessor level,
 			BlockPos pos, Species species) {
 		int cap = species.nearbyCap();
@@ -293,6 +301,8 @@ public abstract class SpeciesMob extends TamableAnimal {
 	// ---------- forage / contentment (generic; driven by the species "forage" block) ----------
 	private long contentUntil;
 	private boolean forageGoalAttached;
+	/** Tracks age transitions so breeding's baby_scale is actually applied and undone. */
+	private boolean lastBabyState;
 
 	/** Animals that already register a BreedGoal in registerGoals must not get a second. */
 	protected boolean hasBreedGoal() {
@@ -313,6 +323,17 @@ public abstract class SpeciesMob extends TamableAnimal {
 	@Override
 	protected void customServerAiStep(net.minecraft.server.level.ServerLevel level) {
 		super.customServerAiStep(level);
+		// a bred calf is created before vanilla flips it to a baby, and it grows up later:
+		// re-apply on every transition or baby_scale would be a knob that does nothing
+		if (isBaby() != lastBabyState) {
+			lastBabyState = isBaby();
+			Species current = species();
+			if (current != null) {
+				float healthFraction = getMaxHealth() > 0 ? getHealth() / getMaxHealth() : 1.0F;
+				applySpeciesAttributes(current);
+				setHealth(getMaxHealth() * healthFraction);
+			}
+		}
 		// species with a forage block get the goal attached lazily (species is data,
 		// unknown at registerGoals time) — zero Java for future foraging animals
 		if (!forageGoalAttached) {
@@ -323,8 +344,11 @@ public abstract class SpeciesMob extends TamableAnimal {
 			}
 			// data-driven breeding: any species declaring a "breeding" block gets the
 			// vanilla breed goal, so adding a breedable animal stays a JSON-only change
+			// priority 2 deliberately: every animal here strolls at 3 or 4, and a goal that
+			// loses the MOVE flag to wandering never gets to breed (vanilla puts BreedGoal
+			// above wander for the same reason). Melee stays at 1, so fights still win.
 			if (species != null && species.breeding() != null && !hasBreedGoal()) {
-				this.goalSelector.addGoal(4, new net.minecraft.world.entity.ai.goal.BreedGoal(this, 1.0));
+				this.goalSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.BreedGoal(this, 1.0));
 			}
 		}
 	}

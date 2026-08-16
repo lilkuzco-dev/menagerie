@@ -255,4 +255,17 @@ public record Species(
 	public boolean specialBool(String key, boolean fallback) {
 		return GsonHelper.getAsBoolean(special, key, fallback);
 	}
+
+	/**
+	 * The capitalised species word to hang in front of an animal's name, or "" when it
+	 * would only stutter: the leopard's one species is "leopard", so the naive join reads
+	 * "Leopard Leopard" in the guide, the discovery toast and on a cage label alike.
+	 * Every place that builds that label goes through here so they cannot drift apart.
+	 */
+	public static String namePrefix(String speciesName, String entityPath) {
+		if (speciesName.isEmpty() || speciesName.equalsIgnoreCase(entityPath)) {
+			return "";
+		}
+		return Character.toUpperCase(speciesName.charAt(0)) + speciesName.substring(1) + " ";
+	}
 }

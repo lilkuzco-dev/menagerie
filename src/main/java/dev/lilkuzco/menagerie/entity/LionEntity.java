@@ -169,9 +169,17 @@ public class LionEntity extends SpeciesMob {
 		return super.doHurtTarget(level, target);
 	}
 
+	/**
+	 * Ambient calls are the idle grumbles; the maned male occasionally answers with a
+	 * full roar instead, which is the sound you actually want to hear across a savanna.
+	 */
 	@Override
 	public void playAmbientSound() {
-		super.playAmbientSound();
+		if (isManed() && !isBaby() && getRandom().nextInt(3) == 0) {
+			playSound(MenagerieSounds.LION_ROAR, 1.4F, 1.0F);
+		} else {
+			super.playAmbientSound();
+		}
 		if (level() instanceof ServerLevel serverLevel) {
 			serverLevel.broadcastEntityEvent(this, EVENT_ROAR);
 		}

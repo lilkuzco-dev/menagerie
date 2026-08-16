@@ -131,9 +131,6 @@ server (port 25567) over RCON with a carpet fake player. Census gained `|fur=<na
 
 ## Not verified in this release — stated plainly
 
-- **The nearby-species cap is implemented but not empirically proven.** It gates natural
-  spawns only, and forcing natural spawn attempts on demand is not something the command
-  surface allows; proving it needs the density transects below.
 - **Density transects (jungle/savanna/river counts vs vanilla panda) were not run.** They
   are the real proof that the calibration lands, and they need a fresh world plus long
   flights. The numbers are set and readable via `/menagerie rarity`, but the in-world
@@ -142,3 +139,39 @@ server (port 25567) over RCON with a carpet fake player. Census gained `|fur=<na
 - Waves 1 (crocodile and the Untamed Wilds ports), 2 (rhino, hyena, elephant) and 3
   (critters, companions) are **not in this release**. Their sources are unpacked,
   license-cleared and inventoried; nothing has been imported from them.
+
+---
+
+# Menagerie 0.4.1 — Post-release Audit
+
+Date: 2026-08-16. Same rig as 0.4.0. This release contains **no new content** — it is the
+result of auditing 0.4.0 after shipping, and every entry below is a defect that was in
+the released 0.4.0 jar. Two of them were regressions introduced *by* 0.4.0's own
+breeding refactor, which is exactly the class of bug a post-ship audit exists to catch.
+
+New debug tooling: `/menagerie spawntest <entity> [trials]`, which runs the real natural
+spawn predicate N times at the caller's position and reports the acceptance rate. This is
+what finally made the nearby-species cap testable.
+
+| # | Fix | Verification |
+|---|-----|--------------|
+| 1 | **Cage bait silently died for hippo and tortoise.** 0.4.0 moved `breed_item` into the new `breeding` block, but `CageTrapBlockEntity.baitMatches` still read only `breed_item` — so any species that migrated lost its bait. Hippo and savanna tortoise had **no valid bait item in the world at all** and could never be trapped. | **PASS** — bait now also reads the `breeding` block. Live: reinforced cage baited with a melon slice captured a river hippo (`menagerie_captured` populated, `closed=true`). A full bait sweep of all 16 species now shows every one reachable. |
+| 2 | **The vulture could never be caged.** It declares `cage_tier: 1`, but its bait surface was empty: no tame item, no breed item, and an empty `diet.hunts` (it scavenges rather than hunts). | **PASS** — scavengers are now lured by the same `VultureEntity.CARRION` table they strip off the ground, so the two cannot drift apart. Live: cage baited with rotten flesh captured a griffon vulture. |
+| 3 | **`baby_scale` did nothing.** Species attributes were applied once at spawn, so a baby kept its adult scale for its whole childhood and popped to size on no particular tick. | **PASS** — `customServerAiStep` now re-applies species attributes when `isBaby()` flips, preserving the health fraction. Live: a river hippo calf reads `scale 0.5` against the adults' `1.0`. |
+| 4 | **The Field Guide lost its breeding line.** Same root cause as #1 — it read `breed_item` only, so every migrated species read "Does not breed" while being perfectly breedable. | **PASS** — `docs/field_guide.png`: the Nile crocodile entry reads "Breed with: salmon, cod, beef". |
+| 5 | **"Leopard Leopard".** The guide, the discovery toast and the cage-item label each joined species + animal name by hand; when a species shares its animal's name the label stuttered. | **PASS** — one shared `Species.namePrefix` helper now serves all three call sites, so they cannot diverge again. `docs/field_guide.png` reads "Leopard"; "Savanna Lion" (where the prefix does carry meaning) is unchanged. |
+| 6 | **`BreedGoal` sat below every stroll goal** at priority 4. A goal that loses the MOVE flag to wandering never gets to breed; vanilla puts `BreedGoal` above wander for this reason. | **PASS** — moved to priority 2 (melee stays at 1, so fights still win). Live: lion, leopard and crocodile each produced a baby within ~15s of being fed. The 0.4.0 changelog claimed these five were breedable; before this audit only hippo and grizzly had actually been demonstrated. |
+| 7 | **The lion never roared.** 8 roar sounds were imported, registered and wired into `sounds.json`, but nothing ever played them — only the roar *animation* was triggered. | **PASS** — maned adults now roar on ~1-in-3 ambient calls. Sound wiring re-audited end to end: 8 `roar*.ogg` present, event registered, subtitle key exists. |
+| 8 | **Rarity config was published from a worker thread.** `SpeciesRegistry` called `RarityConfig.set(...)` inside `prepare()`, which runs off-thread during a reload. | **PASS** — parsed in `prepare()`, published in `apply()`. |
+| 9 | **The nearby-species cap — now proven.** Listed as "implemented but not empirically proven" in 0.4.0. | **PASS** — via `/menagerie spawntest gorilla 200`: 0 nearby → 200/200 allowed; 3 nearby → 100%; **7 nearby → 200/200 (100%); 8 nearby (the configured cap) → 0/200 (0%)**. The boundary is exactly where the JSON says it is. |
+| 10 | Render + audio regression sweep | **PASS** — full client gametest re-run: all 13 screenshots render. The lion mane still draws only for the pride male (and he is visibly larger from the scale modifier); no missing-texture or unknown-sound warnings. |
+| 11 | Build | **PASS** — clean `./gradlew build`; still Fabric-API-only. |
+
+## Still not verified — carried forward from 0.4.0
+
+- **Density transects (jungle/savanna/river counts vs vanilla panda) were not run.** The
+  cap's boundary is now proven (#9), but that is the ceiling, not the resulting in-world
+  density. The transects remain the real proof that the calibration lands.
+- **The 15-minute spawn soak / MSPT check was not run.**
+- Waves 1 (crocodile and the Untamed Wilds ports), 2 (rhino, hyena, elephant) and 3
+  (critters, companions) are still **not in this release**.

@@ -16,7 +16,11 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -50,6 +54,12 @@ public final class MenagerieCommands {
 																IdentifierArgument.getId(ctx, "entity"),
 																IntegerArgumentType.getInteger(ctx, "radius"),
 																IntegerArgumentType.getInteger(ctx, "keep")))))))
+						.then(Commands.literal("spawntest")
+								.then(Commands.argument("entity", IdentifierArgument.id())
+										.then(Commands.argument("trials", IntegerArgumentType.integer(1, 2000))
+												.executes(ctx -> spawnTest(ctx.getSource(),
+														IdentifierArgument.getId(ctx, "entity"),
+														IntegerArgumentType.getInteger(ctx, "trials"))))))
 						.then(Commands.literal("rarity")
 								.executes(ctx -> rarity(ctx.getSource())))
 						.then(Commands.literal("silverback")
@@ -157,6 +167,44 @@ public final class MenagerieCommands {
 		source.sendSuccess(() -> Component.literal("culled " + culled + " " + entityId.getPath()
 				+ " (kept " + kept + " wild, spared " + spared + " tamed/named)"), true);
 		return culled;
+	}
+
+	/**
+	 * Runs the REAL natural-spawn predicate N times at the command position and reports
+	 * how many attempts would have been allowed. This is how the nearby-species cap gets
+	 * verified without waiting on the spawner: same code path, deterministic sample.
+	 */
+	private static int spawnTest(CommandSourceStack source, Identifier entityId, int trials) {
+		ServerLevel level = source.getLevel();
+		BlockPos pos = BlockPos.containing(source.getPosition());
+		EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(entityId);
+		if (type == null || !BuiltInRegistries.ENTITY_TYPE.getKey(type).equals(entityId)
+				|| !(type.create(level, EntitySpawnReason.COMMAND) instanceof SpeciesMob probe)) {
+			source.sendFailure(Component.literal("not a menagerie animal: " + entityId));
+			return 0;
+		}
+		probe.discard();
+		@SuppressWarnings("unchecked")
+		EntityType<? extends net.minecraft.world.entity.Mob> mobType =
+				(EntityType<? extends net.minecraft.world.entity.Mob>) type;
+		net.minecraft.util.RandomSource random = net.minecraft.util.RandomSource.create();
+		int allowed = 0;
+		for (int i = 0; i < trials; i++) {
+			if (SpeciesMob.checkSpeciesSpawnRules(mobType, level, EntitySpawnReason.NATURAL, pos, random)) {
+				allowed++;
+			}
+		}
+		int nearby = level.getEntities(mobType,
+				AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos))
+						.inflate(dev.lilkuzco.menagerie.data.RarityConfig.NEARBY_RADIUS, 64,
+								dev.lilkuzco.menagerie.data.RarityConfig.NEARBY_RADIUS),
+				e -> true).size();
+		final int pass = allowed;
+		source.sendSuccess(() -> Component.literal(String.format(
+				"spawntest %s: %d/%d attempts allowed (%.0f%%), %d already within %d blocks",
+				entityId.getPath(), pass, trials, 100.0 * pass / trials, nearby,
+				dev.lilkuzco.menagerie.data.RarityConfig.NEARBY_RADIUS)), false);
+		return pass;
 	}
 
 	/** Resolved spawn numbers per species — makes a /reload retune observable. */

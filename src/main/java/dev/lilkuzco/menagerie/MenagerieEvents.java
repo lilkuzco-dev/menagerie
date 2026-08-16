@@ -56,10 +56,10 @@ public final class MenagerieEvents {
 						}
 					}
 					if (discoveries.discover(player.getUUID(), key)) {
-						String speciesName = species.name().substring(0, 1).toUpperCase() + species.name().substring(1);
+						String path = net.minecraft.resources.Identifier.parse(species.entityId()).getPath();
 						net.minecraft.network.chat.Component name = net.minecraft.network.chat.Component
-								.literal(speciesName + " ").append(net.minecraft.network.chat.Component.translatable(
-										"entity.menagerie." + net.minecraft.resources.Identifier.parse(species.entityId()).getPath()));
+								.literal(dev.lilkuzco.menagerie.data.Species.namePrefix(species.name(), path))
+								.append(net.minecraft.network.chat.Component.translatable("entity.menagerie." + path));
 						player.sendSystemMessage(net.minecraft.network.chat.Component
 								.translatable("guide.menagerie.discovered", name), true);
 						player.level().playSound(null, player.blockPosition(),

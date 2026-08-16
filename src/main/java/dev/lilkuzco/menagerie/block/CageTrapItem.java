@@ -37,7 +37,8 @@ public class CageTrapItem extends BlockItem {
 				? Component.literal("?")
 				: Component.translatable("entity." + Identifier.parse(entityId).getNamespace()
 						+ "." + Identifier.parse(entityId).getPath());
-		String speciesLabel = species.isEmpty() ? "" : capitalize(species) + " ";
+		String speciesLabel = entityId.isEmpty() ? ""
+				: dev.lilkuzco.menagerie.data.Species.namePrefix(species, Identifier.parse(entityId).getPath());
 		builder.accept(Component.translatable("item.menagerie.cage_trap.occupied",
 				Component.literal(speciesLabel).append(animal))
 				.withStyle(style -> style.withColor(0xFFE8C36A)));
@@ -52,9 +53,5 @@ public class CageTrapItem extends BlockItem {
 			return null;
 		}
 		return data.getUnsafe().getCompound("menagerie_captured").orElse(null);
-	}
-
-	private static String capitalize(String value) {
-		return value.isEmpty() ? value : Character.toUpperCase(value.charAt(0)) + value.substring(1);
 	}
 }

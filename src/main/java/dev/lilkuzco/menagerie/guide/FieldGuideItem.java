@@ -68,8 +68,13 @@ public class FieldGuideItem extends Item {
 		if (!species.tameItem().isEmpty()) {
 			lines.add("Tame with: " + shortId(species.tameItem()));
 		}
-		if (!species.breedItem().isEmpty() && !species.breedItem().equals(species.tameItem())) {
+		if (species.breeding() != null && !species.breeding().items().isEmpty()) {
+			lines.add("Breed with: " + String.join(", ",
+					species.breeding().items().stream().map(FieldGuideItem::shortId).toList()));
+		} else if (!species.breedItem().isEmpty() && !species.breedItem().equals(species.tameItem())) {
 			lines.add("Breed with: " + shortId(species.breedItem()));
+		} else {
+			lines.add("Does not breed");
 		}
 		if (species.diet() != null && !species.diet().hunts().isEmpty()) {
 			lines.add("Hunts: " + String.join(", ", species.diet().hunts().stream().map(FieldGuideItem::shortId).toList()));

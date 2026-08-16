@@ -104,14 +104,17 @@ public final class SpeciesRegistry {
 	}
 
 	private static class Listener extends SimpleReloadListener<Map<String, List<Species>>> {
+		private volatile @Nullable RarityConfig pendingRarity;
+
 		@Override
 		protected Map<String, List<Species>> prepare(PreparableReloadListener.SharedState state) {
 			ResourceManager manager = state.resourceManager();
-			// rarity presets first: species resolve their tier lazily, but keeping the
-			// load in the same listener means one /reload retunes density and stats together
-			RarityConfig.set(manager.getResource(Menagerie.id("menagerie_config/rarity.json"))
+			// parsed here (worker thread) but NOT published until apply(): swapping global
+			// state during prepare would race the game thread and would stick even if the
+			// rest of the reload failed
+			pendingRarity = manager.getResource(Menagerie.id("menagerie_config/rarity.json"))
 					.map(res -> RarityConfig.fromJson(parse(res)))
-					.orElseGet(RarityConfig::defaults));
+					.orElseGet(RarityConfig::defaults);
 			Map<String, List<Species>> map = new HashMap<>();
 			manager.listResources("species", p -> p.getPath().endsWith(".json")).entrySet().stream()
 					.sorted(Map.Entry.comparingByKey())
@@ -129,6 +132,10 @@ public final class SpeciesRegistry {
 
 		@Override
 		protected void apply(Map<String, List<Species>> data, PreparableReloadListener.SharedState state) {
+			if (pendingRarity != null) {
+				RarityConfig.set(pendingRarity);
+				pendingRarity = null;
+			}
 			Map<String, List<Species>> frozen = new HashMap<>();
 			data.forEach((key, value) -> frozen.put(key, List.copyOf(value)));
 			byEntity = Map.copyOf(frozen);
