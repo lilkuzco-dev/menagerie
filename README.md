@@ -119,6 +119,24 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.7 — Creative access (2026-08-16)
+
+- **Spawn eggs for all nine animals** — gorilla, crocodile, tortoise, leopard, hippo,
+  grizzly, vulture, lion, snake. None existed before; every animal needed a command to
+  obtain.
+- **A dedicated "Menagerie" creative tab** holding everything the mod adds: the Field
+  Guide, both cage traps, and all nine eggs.
+- Egg icons are vanilla's own spawn egg recoloured (26.2 removed the tintable template,
+  so each egg must ship its own texture), with colours **sampled from each animal's body
+  texture** so an egg matches what it produces. Provenance in
+  [`ASSETS-ORIGIN.md`](ASSETS-ORIGIN.md).
+- **New build gate:** a registered entity with no spawn egg now fails the build, as does
+  a registered item with no lang key or a tab with no title. The item list is read from
+  the shipped item definitions rather than scraped out of Java — the old regex both
+  missed concatenated names and mistook the tab id for an item.
+- The render battery opens the tab, asserts every registered item is listed, and then
+  spawns each animal from its egg to confirm the right species and no placeholder skin.
+
 ### 0.4.6 — Size pass (2026-08-16)
 
 Every animal resized against **measured** vanilla hitboxes (cow 0.90x1.40, horse

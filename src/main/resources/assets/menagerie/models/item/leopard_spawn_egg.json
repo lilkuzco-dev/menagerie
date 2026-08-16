@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "menagerie:item/leopard_spawn_egg"
+  }
+}

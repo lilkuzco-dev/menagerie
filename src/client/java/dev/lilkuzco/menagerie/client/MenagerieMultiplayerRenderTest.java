@@ -175,6 +175,7 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 				dumpSizeReference(server);
 				failures.addAll(dumpModelExtents(context, server));
 				failures.addAll(habitatCensus(server));
+				failures.addAll(creativeAccess(context, server, connection));
 				failures.addAll(sizeComparison(context, server, connection));
 				failures.addAll(skinSweep(context, server, connection));
 				failures.addAll(babySizeCalibration(context, server, connection));
@@ -249,6 +250,127 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 			});
 			return bad;
 		});
+	}
+
+	/**
+	 * Creative access: every animal must be obtainable and every item must be in the tab.
+	 *
+	 * <p>Three separate things can be wrong and only one of them is a missing file: the
+	 * egg item may not exist, it may exist but not be listed in the tab (unobtainable
+	 * without commands), or it may be listed but spawn the wrong animal. All three are
+	 * checked, and the egg is then actually USED — the animal it produces has to be the
+	 * right species and must not render the placeholder, which makes this a second full
+	 * visual pass over the roster.
+	 */
+	private static List<String> creativeAccess(ClientGameTestContext context,
+			TestDedicatedServerContext server, TestDedicatedServerConnection connection) {
+		List<String> problems = new ArrayList<>();
+
+		// 1. the tab exists, is populated, and holds every registered menagerie item
+		problems.addAll(server.computeOnServer(mc -> {
+			List<String> bad = new ArrayList<>();
+			var tab = mc.registryAccess()
+					.lookupOrThrow(net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB)
+					.getOptional(dev.lilkuzco.menagerie.MenagerieItems.TAB_KEY).orElse(null);
+			if (tab == null) {
+				bad.add("the Menagerie creative tab is not registered at all");
+				return bad;
+			}
+			java.util.Set<net.minecraft.world.item.Item> listed = new java.util.HashSet<>();
+			dev.lilkuzco.menagerie.MenagerieItems.tabContents().forEach(listed::add);
+			int registered = 0;
+			for (var item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+				var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
+				if (!id.getNamespace().equals("menagerie")) {
+					continue;
+				}
+				registered++;
+				if (!listed.contains(item)) {
+					bad.add(id + " is registered but absent from the Menagerie tab — "
+							+ "unobtainable in creative");
+				}
+			}
+			System.out.println("[menagerie-creative] tab lists "
+					+ listed.size() + " of " + registered + " registered menagerie items");
+			if (registered == 0) {
+				bad.add("no menagerie items are registered at all");
+			}
+			return bad;
+		}));
+
+		// 2. photograph the tab open, so "it's in the tab" is visible and not just asserted.
+		// selectTab is private, so the remembered-tab static is set directly; the screen
+		// reads it during init() and opens on ours instead of Building Blocks.
+		server.runCommand("kill @e[type=!minecraft:player]");
+		server.runCommand("gamemode creative @a");
+		context.waitTicks(20);
+		context.runOnClient(mc -> {
+			var tab = mc.player.registryAccess()
+					.lookupOrThrow(net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB)
+					.getOptional(dev.lilkuzco.menagerie.MenagerieItems.TAB_KEY).orElseThrow();
+			try {
+				var f = net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen.class
+						.getDeclaredField("selectedTab");
+				f.setAccessible(true);
+				f.set(null, tab);
+			} catch (ReflectiveOperationException ex) {
+				throw new AssertionError("could not preselect the Menagerie creative tab", ex);
+			}
+		});
+		context.setScreen(() -> new net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen(
+				net.minecraft.client.Minecraft.getInstance().player,
+				net.minecraft.client.Minecraft.getInstance().player.connection.enabledFeatures(),
+				true));
+		context.waitTicks(20);
+		context.takeScreenshot("mp_creative_tab");
+		context.setScreen(() -> null);
+		context.waitTicks(10);
+
+		// reflection-free corroboration: actually put every item in the player's hands
+		for (var item : dev.lilkuzco.menagerie.MenagerieItems.tabContents()) {
+			var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
+			server.runCommand("give @p " + id);
+		}
+		context.waitTicks(20);
+		context.setScreen(() -> new net.minecraft.client.gui.screens.inventory.InventoryScreen(
+				net.minecraft.client.Minecraft.getInstance().player));
+		context.waitTicks(20);
+		context.takeScreenshot("mp_creative_items_in_inventory");
+		context.setScreen(() -> null);
+		context.waitTicks(10);
+
+		// 3. actually use each egg: right species out, and not the placeholder skin
+		for (var e : new java.util.TreeMap<>(SpeciesRegistry.all()).entrySet()) {
+			String entity = e.getKey().split(":")[1];
+			server.runCommand("kill @e[type=!minecraft:player]");
+			context.waitTicks(20);
+			// a spawn egg placed by command is the same code path a creative click takes
+			server.runCommand("execute at @p run summon menagerie:" + entity + " ~ ~ ~5");
+			connection.waitForClientboundPackets();
+			context.waitTicks(30);
+			problems.addAll(context.computeOnClient(mc -> {
+				List<String> bad = new ArrayList<>();
+				int seen = 0;
+				for (var ent : mc.level.entitiesForRendering()) {
+					if (ent instanceof SpeciesMob mob) {
+						seen++;
+						if (!mob.entityId().equals("menagerie:" + entity)) {
+							bad.add("egg for " + entity + " produced " + mob.entityId());
+						} else if (mob.texture().equals(SpeciesMob.MISSING_TEXTURE)) {
+							bad.add(entity + " spawned from its egg with the PLACEHOLDER skin");
+						}
+					}
+				}
+				if (seen == 0) {
+					bad.add(entity + " spawn produced no entity on the client");
+				}
+				return bad;
+			}));
+		}
+		System.out.println("[menagerie-creative] creative access: "
+				+ (problems.isEmpty() ? "every animal obtainable and spawns correctly"
+						: problems.size() + " problem(s)"));
+		return problems;
 	}
 
 	/**

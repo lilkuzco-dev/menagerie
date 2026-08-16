@@ -433,19 +433,35 @@ def main():
     ents = re.findall(r'register\("(\w+)",\s*\n?\s*EntityType\.Builder',
                       open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
                                         "entity", "MenagerieEntities.java")).read())
-    reg_src = (open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
-                                 "MenagerieItems.java")).read()
-               + open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
-                                   "block", "MenagerieBlocks.java")).read())
-    things = set(re.findall(r'(?:register|Menagerie\.id)\("([a-z0-9_]+)"', reg_src))
+    # The item list comes from the shipped item DEFINITIONS, not from scraping Java:
+    # every registered item needs one to render, and a regex over registration calls
+    # both missed concatenated names (the spawn eggs) and mistook the creative tab id
+    # for an item.
+    items_dir = os.path.join(RES, "assets", NS, "items")
+    things = {f[:-5] for f in os.listdir(items_dir) if f.endswith(".json")}
     a.anchor(len(ents) >= 9, f"entity registry scan found {len(ents)} entities (expected >= 9)")
-    a.anchor(len(things) >= 3, f"item/block registry scan found {len(things)} (expected >= 3)")
+    a.anchor(len(things) >= 12, f"found {len(things)} item definitions (expected >= 12)")
     for e in ents:
         if f"entity.{NS}.{e}" not in lang:
             a.fail("a", f"entity {NS}:{e} has no en_us.json key entity.{NS}.{e}")
     for t in sorted(things):
         if f"item.{NS}.{t}" not in lang and f"block.{NS}.{t}" not in lang:
             a.fail("a", f"{NS}:{t} has no en_us.json key (item.{NS}.{t} / block.{NS}.{t})")
+
+    # ---- 4d. every animal must be obtainable in creative -----------------------
+    # A registered entity with no spawn egg is invisible to a creative player and
+    # untestable without commands. This is the gate for that.
+    for e in ents:
+        if f"{e}_spawn_egg" not in things:
+            a.fail("a", f"entity {NS}:{e} has NO spawn egg — it cannot be obtained in "
+                        f"creative. Expected an item definition {e}_spawn_egg.json")
+    eggs = sorted(t for t in things if t.endswith("_spawn_egg"))
+    a.anchor(len(eggs) == len(ents),
+             f"spawn eggs cover every animal ({len(eggs)} eggs / {len(ents)} entities)")
+    # the creative tab must have a title string, or it renders as a raw key
+    if "itemGroup.menagerie.menagerie" not in lang:
+        a.fail("a", "the Menagerie creative tab has no en_us.json title "
+                    "(itemGroup.menagerie.menagerie)")
 
     # ---- 4c. vanilla ids named by our data -----------------------------------
     # A breed item or forage block that vanilla does not have fails SILENTLY: the
