@@ -66,7 +66,7 @@ JSON file, zero Java.
   (1-in-3 per feed) into a wolf-style companion: sit, follow, teleports past 32
   blocks, defends you. Babies ride on adults' backs until grown. Idle adults
   occasionally tear a leaves block (needs `mobGriefing`). Species: `lowland`
-  (jungle), `mountain` (windswept hills + grove, thicker coat, +4 health).
+  (jungle), `mountain` (bamboo and montane jungle, thicker coat, +4 health).
 - **Crocodile** — swamp ambush predator: floats in water, lunges at prey in reach,
   drags it (slowness + damage over 2s), releases. Neutral on land. Species: `nile`
   (swamp), `saltwater` (mangrove, 20% bigger, harder-hitting).
@@ -118,6 +118,27 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 `build/run-gametest/screenshots/`).
 
 ## Changelog
+
+### 0.4.3 — Audit sweep 2 (2026-08-16)
+
+Follow-up sweep over 0.4.2's own verification. No new defect in shipped behavior; four
+gaps in what was being *checked*.
+
+- **The fallback texture is now proven to load on the client.** Every render test
+  resolved a real skin, so the placeholder itself had never been exercised — the claim
+  that a Menagerie fallback can never be a checkerboard rested on an untested file. It
+  is now asserted present, decodable, and magenta/amber.
+- **Diagnosing a checkerboard from a screenshot.** Magenta + black is *vanilla's*
+  missing texture, so that client is running pre-0.4.2 code. Magenta + amber is ours,
+  meaning the server did not sync a skin — usually a server older than the client.
+  `texture()` now logs a one-shot warning naming that cause.
+- **Three more slices of the requestable set are gated:** vanilla sound event ids,
+  vanilla item/block/entity/effect ids named by species data and recipes (the shape of
+  the 0.4.1 missing-bait bug), and lang keys for every registered entity, item and
+  block.
+- The `aquatic` species field was read by nothing in Java. The waterline spawn placement
+  now consults it directly, so water counts as ground only for a species whose data says
+  so.
 
 ### 0.4.2 — Reliability audit + full sweep (2026-08-16)
 

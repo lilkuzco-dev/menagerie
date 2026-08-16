@@ -119,10 +119,14 @@ public final class MenagerieEntities {
 					&& reason != net.minecraft.world.entity.EntitySpawnReason.CHUNK_GENERATION) {
 				return true;
 			}
-			if (!SpeciesMob.checkSpeciesGate(type, level, reason, pos, random)) {
+			dev.lilkuzco.menagerie.data.Species species =
+					SpeciesMob.gateSpecies(type, level, reason, pos, random);
+			if (species == null) {
 				return false;
 			}
-			return level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)
+			// water is only "ground" for a species that says so in its own data; the
+			// aquatic flag is therefore load-bearing, not just something the linter reads
+			return species.aquatic() && level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)
 					? atWaterline(level, pos)
 					: SpeciesMob.groundSpawnOk(level, pos);
 		}

@@ -332,6 +332,55 @@ spawn-lint: PASS — every species' spawn rules are inside their ecology
 
 ---
 
+## Sweep 2 (0.4.3) — what the first sweep's design could not see
+
+The first sweep validated the requestable set *as I had modelled it*. The second asked
+what the model itself was missing, and re-checked a claim I had published without
+proving. No new defect was found in shipped behaviour; four gaps in the **verification**
+were.
+
+| # | Gap | Result |
+|---|---|---|
+| 1 | The placeholder had **never actually been rendered** — every gametest subject resolved a real skin, so the fallback path was untested. The whole "a Menagerie fallback can never be a checkerboard again" claim rested on it. | Now asserted on the client: present in the resource manager, decodes as 64×64, pixels are magenta `FF00FF` / amber `FFB000`. It loads. |
+| 2 | **Vanilla sound EVENT ids** in `sounds.json` (30 of them) were never validated. Vanilla renames these exactly like texture paths, and a bad one is a silent no-sound. Same class as the pig path. | All 30 resolve. Now gated. |
+| 3 | **Vanilla item/block/entity/effect ids** named by species data (breed items, forage blocks, diet hunts, venom effects) and recipes were never validated — this is the exact shape of the 0.4.1 bug where a hippo's breed item left it with no valid bait in the world. | All 61 references resolve. Now gated. |
+| 4 | **Lang coverage** was unchecked: a registered entity/item/block with no key renders as a raw `entity.menagerie.x` string in nameplates, the guide and cage labels. | All 9 entities + 3 items/blocks have keys. Now gated. |
+
+Also fixed in sweep 2: the `aquatic` species field was **read by nothing in Java** — a
+dead record component whose lint rule (S3) claimed the flag and the Java placement could
+not drift apart. The waterline placement now consults `species.aquatic()` directly, so
+water counts as ground only for a species whose own data says so. Behaviour is unchanged
+today (all four hippo/crocodile species declare it) but the flag is now load-bearing
+rather than decorative.
+
+Claim re-verified: 26.2's `LivingEntity.getDefaultDimensions` is
+`getType().getDimensions().scale(getAgeScale())`, and the caller then multiplies by
+`getScale()` (the SCALE attribute). So the hitbox really was base × 0.5 × 0.5 = ¼ under
+the old `baby_scale`, as Part 2 states.
+
+Negative tests added for all three new rules (nonexistent breed item, deleted lang key,
+nonexistent vanilla sound event) — each fails the build, and the restored tree passes.
+
+### Field report during sweep 2 — read this before filing a checkerboard bug
+
+A screenshot came in during this sweep showing the hippo at `[1746, 61, 480]` still
+checkerboarded. It is **magenta/black**, which is *vanilla's* missing texture — the
+Menagerie placeholder is magenta/**amber**. That colour difference is now an asserted
+invariant precisely so a screenshot alone tells you which code ran:
+
+* **magenta + black** → vanilla's checkerboard → the renderer never reached Menagerie's
+  fallback → that client is running **pre-0.4.2** code.
+* **magenta + amber** → our placeholder → Menagerie ran, but no skin was synced → the
+  **server** is older than the client, or has no species registry.
+
+At the time of that report, `server-mods-staging` still held `menagerie-0.4.1.jar`. The
+fix is server-side — the server must be on ≥0.4.2 for skins to sync at all — so it could
+not yet be in effect. `SpeciesMob.texture()` now logs a one-shot WARN naming this exact
+cause, so the next occurrence explains itself in the log instead of needing a colour
+forensics pass.
+
+---
+
 ## Deviations — flagged, reviewed, deliberately unchanged
 
 * **`leopard_jungle` stays in the jungle family.** The brief's ecology table groups

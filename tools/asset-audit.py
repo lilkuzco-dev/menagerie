@@ -33,6 +33,7 @@ Usage:
 """
 
 import argparse
+import glob
 import json
 import os
 import re
@@ -185,6 +186,42 @@ def read_vanilla(jar_path):
         return {n for n in z.namelist() if n.startswith("assets/") and not n.endswith("/")}
 
 
+def read_vanilla_ids(jar_path):
+    """
+    Vanilla item/block/entity/effect ids, via assets/minecraft/lang/en_us.json.
+
+    A referenced id that vanilla does not have fails silently at runtime — the 0.4.1
+    bait bug (a species whose breed item did not exist) and the pig-texture
+    checkerboard are the same shape. Cheap to check, so it is checked.
+    """
+    if not jar_path or not os.path.exists(jar_path):
+        return None
+    with zipfile.ZipFile(jar_path) as z:
+        lang = json.loads(z.read("assets/minecraft/lang/en_us.json"))
+    out = {}
+    for kind in ("item", "block", "entity", "effect"):
+        out[kind] = {k.split(".", 2)[2] for k in lang if k.startswith(f"{kind}.minecraft.")}
+    return out
+
+
+def read_vanilla_sound_events(assets_dir):
+    """Vanilla sound EVENT ids, from the downloaded asset index (not the jar)."""
+    if not assets_dir or not os.path.isdir(assets_dir):
+        return None
+    indexes = sorted(glob.glob(os.path.join(assets_dir, "indexes", "*.json")))
+    if not indexes:
+        return None
+    objects = json.load(open(indexes[-1]))["objects"]
+    entry = objects.get("minecraft/sounds.json")
+    if not entry:
+        return None
+    h = entry["hash"]
+    path = os.path.join(assets_dir, "objects", h[:2], h)
+    if not os.path.exists(path):
+        return None
+    return set(json.load(open(path)).keys())
+
+
 def species_files():
     d = os.path.join(RES, "data", NS, "species")
     return sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith(".json"))
@@ -194,11 +231,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--jar")
     ap.add_argument("--vanilla-jar")
+    ap.add_argument("--vanilla-assets",
+                    help="loom assets dir (indexes/ + objects/), for vanilla sound events")
     ap.add_argument("--matrix")
     args = ap.parse_args()
 
     shipped = read_shipped(args.jar)
     vanilla = read_vanilla(args.vanilla_jar)
+    vanilla_ids = read_vanilla_ids(args.vanilla_jar)
+    vanilla_sounds = read_vanilla_sound_events(args.vanilla_assets)
     a = Audit(shipped, vanilla)
 
     where = args.jar if args.jar else "src/main/resources"
@@ -296,6 +337,7 @@ def main():
     with open(os.path.join(RES, "assets", NS, "lang", "en_us.json")) as fh:
         lang = json.load(fh)
 
+    vanilla_event_refs = 0
     for event, body in sounds.items():
         for entry in body.get("sounds", []):
             if isinstance(entry, dict):
@@ -303,7 +345,23 @@ def main():
             else:
                 nm, kind = entry, "sound"
             if kind == "event":
-                continue  # a reference to another sound EVENT, not to a file
+                # a reference to another sound EVENT, not to a file. Vanilla renames
+                # these between versions exactly like texture paths do, and a bad one
+                # is a silent no-sound rather than an error.
+                target = nm.split(":", 1)[-1]
+                if nm.startswith("menagerie:"):
+                    if target not in sounds:
+                        a.fail("a", f"sounds.json {event} redirects to menagerie event "
+                                    f"{target!r}, which sounds.json does not define")
+                else:
+                    vanilla_event_refs += 1
+                    if vanilla_sounds is None:
+                        a.fail("a", f"cannot verify vanilla sound event {nm!r} "
+                                    f"(pass --vanilla-assets)")
+                    elif target not in vanilla_sounds:
+                        a.fail("a", f"sounds.json {event} references vanilla sound event "
+                                    f"{nm!r}, which does not exist in this Minecraft")
+                continue
             ns, _, rel = nm.partition(":")
             if not rel:
                 ns, rel = "minecraft", ns
@@ -326,6 +384,65 @@ def main():
     for ev in sorted(sounds):
         if ev not in registered:
             a.fail("b", f"sounds.json defines {ev} but no Java SoundEvent registers it")
+
+    # ---- 4b. lang coverage ---------------------------------------------------
+    # A registered thing with no lang key renders as a raw key ("entity.menagerie.x")
+    # in nameplates, the guide and cage labels. Nothing else catches it.
+    ents = re.findall(r'register\("(\w+)",\s*\n?\s*EntityType\.Builder',
+                      open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
+                                        "entity", "MenagerieEntities.java")).read())
+    reg_src = (open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
+                                 "MenagerieItems.java")).read()
+               + open(os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS,
+                                   "block", "MenagerieBlocks.java")).read())
+    things = set(re.findall(r'(?:register|Menagerie\.id)\("([a-z0-9_]+)"', reg_src))
+    a.anchor(len(ents) >= 9, f"entity registry scan found {len(ents)} entities (expected >= 9)")
+    a.anchor(len(things) >= 3, f"item/block registry scan found {len(things)} (expected >= 3)")
+    for e in ents:
+        if f"entity.{NS}.{e}" not in lang:
+            a.fail("a", f"entity {NS}:{e} has no en_us.json key entity.{NS}.{e}")
+    for t in sorted(things):
+        if f"item.{NS}.{t}" not in lang and f"block.{NS}.{t}" not in lang:
+            a.fail("a", f"{NS}:{t} has no en_us.json key (item.{NS}.{t} / block.{NS}.{t})")
+
+    # ---- 4c. vanilla ids named by our data -----------------------------------
+    # A breed item or forage block that vanilla does not have fails SILENTLY: the
+    # animal simply can never be fed. That is the 0.4.1 bait bug's exact shape.
+    if vanilla_ids is not None:
+        checked_ids = 0
+
+        def vcheck(kind, pools, ref, where):
+            nonlocal checked_ids
+            if not ref.startswith("minecraft:"):
+                return
+            checked_ids += 1
+            name = ref.split(":", 1)[1]
+            if not any(name in vanilla_ids[p] for p in pools):
+                a.fail("a", f"{where}: {kind} {ref!r} does not exist in this Minecraft")
+
+        for name, entity, sp, doc in species:
+            for it in (doc.get("breeding") or {}).get("items", []):
+                vcheck("breed item", ("item", "block"), it, name)
+            for key in ("tame_item", "breed_item"):
+                if doc.get(key):
+                    vcheck(key, ("item", "block"), doc[key], name)
+            for b in (doc.get("forage") or {}).get("blocks", []):
+                vcheck("forage block", ("block",), b, name)
+            for h in (doc.get("diet") or {}).get("hunts", []):
+                vcheck("diet hunt", ("entity",), h, name)
+            if doc.get("venom"):
+                vcheck("venom effect", ("effect",), doc["venom"]["effect"], name)
+        d = os.path.join(RES, "data", NS, "recipe")
+        for f in sorted(os.listdir(d)):
+            blob = open(os.path.join(d, f)).read()
+            for ref in sorted(set(re.findall(r'"(minecraft:[a-z0-9_]+)"', blob))):
+                if ref.startswith("minecraft:crafting"):
+                    continue  # recipe type, not an ingredient
+                vcheck("recipe id", ("item", "block"), ref, f"recipe/{f}")
+        a.anchor(checked_ids >= 10,
+                 f"vanilla-id check covered {checked_ids} references (expected >= 10)")
+    else:
+        a.warn("vanilla id check skipped (no --vanilla-jar)")
 
     # ---- 5. models / blockstates / item defs ---------------------------------
     ref_re = re.compile(r'"(' + NS + r':[a-z0-9_/]+)"')

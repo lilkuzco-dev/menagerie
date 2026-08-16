@@ -58,6 +58,8 @@ tasks.withType(JavaCompile).configureEach {
 // ---------------------------------------------------------------------------
 def vanillaJar = new File(gradle.gradleUserHomeDir,
 		"caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar")
+// downloaded asset index + objects; the vanilla sound EVENT list lives here, not in the jar
+def vanillaAssets = new File(gradle.gradleUserHomeDir, "caches/fabric-loom/assets")
 
 tasks.register('assetAudit', Exec) {
 	group = 'verification'
@@ -69,7 +71,8 @@ tasks.register('assetAudit', Exec) {
 	doFirst {
 		commandLine 'python3', 'tools/asset-audit.py',
 				'--jar', tasks.named('jar').get().archiveFile.get().asFile.absolutePath,
-				'--vanilla-jar', vanillaJar.absolutePath
+				'--vanilla-jar', vanillaJar.absolutePath,
+				'--vanilla-assets', vanillaAssets.absolutePath
 	}
 }
 

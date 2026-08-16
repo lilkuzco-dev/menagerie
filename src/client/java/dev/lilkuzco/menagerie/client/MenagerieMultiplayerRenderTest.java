@@ -109,6 +109,42 @@ public class MenagerieMultiplayerRenderTest implements FabricClientGameTest {
 								+ SpeciesRegistry.all().size() + " entities (shared-JVM harness; "
 								+ "a real remote client holds 0 — hence the sync assertions)"));
 
+				// The placeholder is the last line of defence, and the whole "a Menagerie
+				// fallback can never be a checkerboard again" claim rests on the CLIENT being
+				// able to load it. Prove it decodes, and prove its colours are the ones that
+				// distinguish it from vanilla's magenta/black missing texture — so a bug
+				// report can be triaged from a screenshot alone.
+				context.runOnClient(mc -> {
+					var stack = mc.getResourceManager().getResourceStack(SpeciesMob.MISSING_TEXTURE);
+					if (stack.isEmpty()) {
+						throw new AssertionError(SpeciesMob.MISSING_TEXTURE
+								+ " is not present in the CLIENT resource manager — the fallback "
+								+ "would render as vanilla's checkerboard");
+					}
+					try (var in = stack.getLast().open();
+							var img = com.mojang.blaze3d.platform.NativeImage.read(in)) {
+						if (img.getWidth() != 64 || img.getHeight() != 64) {
+							throw new AssertionError("placeholder is " + img.getWidth() + "x"
+									+ img.getHeight() + ", expected 64x64");
+						}
+						// low 24 bits come back RGB-ordered here (verified empirically)
+						int a = img.getPixel(0, 0) & 0x00FFFFFF;
+						int b = img.getPixel(8, 0) & 0x00FFFFFF;
+						if (a != 0x00FF00FF || b != 0x00FFB000) {
+							throw new AssertionError(String.format(
+									"placeholder colours changed (%06X/%06X). They must stay "
+											+ "magenta/amber: magenta+BLACK is VANILLA's missing "
+											+ "texture, and telling them apart in a screenshot is "
+											+ "how we know whether our code ran at all.", a, b));
+						}
+						System.out.println("[menagerie-mp-test] placeholder loads on the client: "
+								+ img.getWidth() + "x" + img.getHeight()
+								+ " magenta/amber (vanilla's is magenta/black)");
+					} catch (java.io.IOException e) {
+						throw new AssertionError("placeholder failed to decode on the client", e);
+					}
+				});
+
 				List<Subject> subjects = new ArrayList<>();
 				for (Subject s : ROSTER) {
 					subjects.add(s);

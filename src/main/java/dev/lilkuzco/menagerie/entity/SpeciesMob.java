@@ -1,5 +1,6 @@
 package dev.lilkuzco.menagerie.entity;
 
+import dev.lilkuzco.menagerie.Menagerie;
 import dev.lilkuzco.menagerie.data.RarityConfig;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.data.SpeciesRegistry;
@@ -165,8 +166,27 @@ public abstract class SpeciesMob extends TamableAnimal {
 		}
 		// server side (or singleplayer) before the first refresh; never a checkerboard
 		Identifier resolved = resolveTexture();
-		return resolved != null ? resolved : MISSING_TEXTURE;
+		if (resolved != null) {
+			return resolved;
+		}
+		// Reaching here on a CLIENT means the server never published a skin and this
+		// client has no registry to fall back on. Almost always a version mismatch, so
+		// say that out loud once — an unexplained placeholder is hard to diagnose from
+		// a screenshot, which is exactly how the original bug stayed hidden.
+		if (level().isClientSide() && !warnedMissingSync) {
+			warnedMissingSync = true;
+			Menagerie.LOGGER.warn(
+					"No skin was synced for {} and this client has no species registry of its "
+							+ "own (species are a datapack, so a remote client never loads them). "
+							+ "Animals will draw the Menagerie placeholder. Usual cause: the "
+							+ "SERVER is running an older Menagerie than this client — check that "
+							+ "both sides are on the same version.", entityId());
+		}
+		return MISSING_TEXTURE;
 	}
+
+	/** One warning per client session; see {@link #texture()}. */
+	private static boolean warnedMissingSync;
 
 	/**
 	 * Resolve this animal's skin from the live registry. Server-side only — override to
@@ -269,28 +289,39 @@ public abstract class SpeciesMob extends TamableAnimal {
 	/** Just the data-driven gate: a species exists here, worldgen_only, live-weight scaling. */
 	public static boolean checkSpeciesGate(EntityType<? extends Mob> type, LevelAccessor level,
 			EntitySpawnReason spawnReason, BlockPos pos, RandomSource random) {
+		return gateSpecies(type, level, spawnReason, pos, random) != null;
+	}
+
+	/**
+	 * The gate, returning WHICH species passed it so a placement rule can consult that
+	 * species' own data (see the waterline placement, which honours {@code aquatic}).
+	 *
+	 * @return the species that would spawn here, or null if nothing may.
+	 */
+	public static @Nullable Species gateSpecies(EntityType<? extends Mob> type, LevelAccessor level,
+			EntitySpawnReason spawnReason, BlockPos pos, RandomSource random) {
 		String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
 		Holder<Biome> biome = level.getBiome(pos);
 		Species species = SpeciesRegistry.pickForBiome(entityId, biome, random);
 		if (species == null) {
-			return false;
+			return null;
 		}
 		if (spawnReason == EntitySpawnReason.NATURAL) {
 			if (species.worldgenOnly()) {
-				return false;
+				return null;
 			}
 			if (random.nextDouble() > SpeciesRegistry.spawnAcceptance(species)) {
-				return false;
+				return null;
 			}
 		}
 		// Epic tiers thin further: only a fraction of otherwise-valid attempts survive.
 		if (species.attemptChance() < 1.0F && random.nextFloat() > species.attemptChance()) {
-			return false;
+			return null;
 		}
 		// The accumulation killer. CREATURE-category animals never despawn, so without a
 		// ceiling even a modest weight piles up forever in a long-lived world. Counting
 		// same-type entities nearby is what keeps a jungle reading alive instead of zoo.
-		return !overNearbyCap(type, level, pos, species);
+		return overNearbyCap(type, level, pos, species) ? null : species;
 	}
 
 	/**
