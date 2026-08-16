@@ -1,11 +1,11 @@
 {
-	"_tuning_notes": "Griffon vulture: circles 20-30 above dry biomes. Any mob death within 48 blocks leaving raw-meat drops pulls vultures to circle the site ~10s, land, and strip the ItemEntities \u2014 the visible 'something died there' beacon. attack=1 is the swoop peck, only ever aimed at players below 3 hearts under open sky. Ambient-style despawn unless hit or named; never spawns without sky above. Deliberately NOT breedable: worldgen ambience animal \u2014 its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-3, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Griffon vulture: circles 20-30 above dry biomes. Any mob death within 48 blocks leaving raw-meat drops pulls vultures to circle the site ~10s, land, and strip the ItemEntities — the visible 'something died there' beacon. attack=1 is the swoop peck, only ever aimed at players below 3 hearts under open sky. Ambient-style despawn unless hit or named; never spawns without sky above. Deliberately NOT breedable: worldgen ambience animal — its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-3, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. ECOLOGY 0.4.2: minecraft:desert -> #c:is_desert so Terralith's deserts count.",
 	"entity": "menagerie:vulture",
 	"species": "griffon",
 	"biomes": [
+		"#c:is_desert",
 		"#minecraft:is_badlands",
-		"#minecraft:is_savanna",
-		"minecraft:desert"
+		"#minecraft:is_savanna"
 	],
 	"group_size": [
 		2,

@@ -78,33 +78,77 @@ public final class MenagerieEntities {
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
 		SpawnPlacements.register(LION, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
-		// crocodiles and hippos may spawn at the water line, so skip the on-ground restriction
+		// crocodiles and hippos wade, so water counts as ground for them — but ONLY at the
+		// water line (see WaterlineSpawn). NO_RESTRICTIONS is deliberate and is why the
+		// predicate below has to do the depth work itself.
 		SpawnPlacements.register(CROCODILE, SpawnPlacementTypes.NO_RESTRICTIONS,
-				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrocodileSpawn::check);
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, WaterlineSpawn::check);
 		SpawnPlacements.register(HIPPO, SpawnPlacementTypes.NO_RESTRICTIONS,
-				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrocodileSpawn::check);
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, WaterlineSpawn::check);
 		// vultures only spawn under open sky (never indoors or underground)
 		SpawnPlacements.register(VULTURE, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (type, level, reason, pos, random) ->
 						level.canSeeSky(pos) && SpeciesMob.checkSpeciesSpawnRules(type, level, reason, pos, random));
 	}
 
-	/** Waterline placement (crocodile, hippo): normal species gate, but water counts as valid ground. */
-	private static final class CrocodileSpawn {
+	/**
+	 * Waterline placement (crocodile, hippo): water counts as valid ground, but only
+	 * where an animal could actually wade.
+	 *
+	 * <p>This predicate used to accept ANY position that had water in it, which combined
+	 * with {@link SpawnPlacementTypes#NO_RESTRICTIONS} — a placement type that performs no
+	 * ground, depth or light test of its own — to allow a spawn at any y in the column.
+	 * That is how a hippo ended up standing on the sea floor: the vanilla spawner offers
+	 * random positions down the whole column, and every submerged one was accepted.
+	 *
+	 * <p>A wading animal now has to find the surface within {@link #WADE_DEPTH} blocks
+	 * above it and a floor within {@link #WADE_DEPTH} below it. Deep water fails both
+	 * halves, so open ocean and the bottom of a deep river are out by construction rather
+	 * than by hoping the biome list never overlaps one.
+	 */
+	private static final class WaterlineSpawn {
+		/** Blocks of water an animal of this size can stand in and still breathe. */
+		private static final int WADE_DEPTH = 3;
+
 		static <T extends net.minecraft.world.entity.Mob> boolean check(EntityType<T> type,
 				net.minecraft.world.level.LevelAccessor level,
 				net.minecraft.world.entity.EntitySpawnReason reason,
 				net.minecraft.core.BlockPos pos, net.minecraft.util.RandomSource random) {
-			boolean inWater = level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)
-					|| level.getFluidState(pos.below()).is(net.minecraft.tags.FluidTags.WATER);
-			if (inWater) {
-				if (reason != net.minecraft.world.entity.EntitySpawnReason.NATURAL
-						&& reason != net.minecraft.world.entity.EntitySpawnReason.CHUNK_GENERATION) {
+			// /summon, spawn eggs and cage releases place the animal deliberately
+			if (reason != net.minecraft.world.entity.EntitySpawnReason.NATURAL
+					&& reason != net.minecraft.world.entity.EntitySpawnReason.CHUNK_GENERATION) {
+				return true;
+			}
+			if (!SpeciesMob.checkSpeciesGate(type, level, reason, pos, random)) {
+				return false;
+			}
+			return level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)
+					? atWaterline(level, pos)
+					: SpeciesMob.groundSpawnOk(level, pos);
+		}
+
+		private static boolean atWaterline(net.minecraft.world.level.LevelAccessor level,
+				net.minecraft.core.BlockPos pos) {
+			// the surface has to be close enough overhead to keep a head above water
+			boolean surfaceNear = false;
+			for (int up = 1; up <= WADE_DEPTH; up++) {
+				if (!level.getFluidState(pos.above(up)).is(net.minecraft.tags.FluidTags.WATER)) {
+					surfaceNear = true;
+					break;
+				}
+			}
+			if (!surfaceNear) {
+				return false;
+			}
+			// ...and a riverbed close enough underfoot to stand on
+			for (int down = 1; down <= WADE_DEPTH; down++) {
+				net.minecraft.core.BlockPos floor = pos.below(down);
+				if (level.getBlockState(floor).isFaceSturdy(level, floor,
+						net.minecraft.core.Direction.UP)) {
 					return true;
 				}
-				return SpeciesMob.checkSpeciesGate(type, level, reason, pos, random);
 			}
-			return SpeciesMob.checkSpeciesSpawnRules(type, level, reason, pos, random);
+			return false;
 		}
 	}
 

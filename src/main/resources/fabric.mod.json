@@ -3,7 +3,7 @@
 	"id": "menagerie",
 	"version": "${version}",
 	"name": "Menagerie",
-	"description": "A wildlife mod: gorilla troops, crocodiles, tortoises, and leopards with a data-driven species system. Phase 1.",
+	"description": "A data-driven wildlife mod with nine animals, natural behaviors, breeding, cage transport, rare variants, and a field guide.",
 	"authors": [
 		"lilkuzco-dev"
 	],
@@ -21,7 +21,8 @@
 			"dev.lilkuzco.menagerie.client.MenagerieClient"
 		],
 		"fabric-client-gametest": [
-			"dev.lilkuzco.menagerie.client.MenagerieRenderTest"
+			"dev.lilkuzco.menagerie.client.MenagerieRenderTest",
+			"dev.lilkuzco.menagerie.client.MenagerieMultiplayerRenderTest"
 		]
 	},
 	"depends": {

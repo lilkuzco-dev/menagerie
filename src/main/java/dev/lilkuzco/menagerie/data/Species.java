@@ -20,6 +20,12 @@ public record Species(
 		String entityId,
 		String name,
 		List<String> biomes,
+		/** Subtracted from {@link #biomes}; wins over it. Lets a species take a broad tag
+		 *  and carve the ecologically wrong members back out (hippo minus frozen rivers). */
+		List<String> excludeBiomes,
+		/** Declares that this species spawns at the water line. Kept in the data so
+		 *  tools/spawn-lint.py can hold it against the Java placement registration. */
+		boolean aquatic,
 		int weight,
 		int groupMin,
 		int groupMax,
@@ -59,14 +65,23 @@ public record Species(
 		}
 	}
 
-	/** Optional "breeding" block: feed two adults -> baby, vanilla-style. */
+	/**
+	 * Optional "breeding" block: feed two adults -> baby, vanilla-style.
+	 *
+	 * <p>{@code baby_scale} multiplies the SCALE attribute of a baby and defaults to
+	 * <b>1.0 = vanilla baby proportions</b>. It is NOT the knob that makes a baby small:
+	 * the client already bakes the baby mesh through {@code BabyModelTransform}, which
+	 * halves the body and leaves the head full size, and vanilla's own age scaling
+	 * shrinks the hitbox. Values below 1.0 stack a SECOND shrink on top of both — 0.5
+	 * here rendered calves at a quarter of adult size, which is why the default moved.
+	 */
 	public record Breeding(List<String> items, int cooldownTicks, double babyScale) {
 		static Breeding fromJson(JsonObject json) {
 			List<String> items = GsonHelper.getAsJsonArray(json, "items", new com.google.gson.JsonArray())
 					.asList().stream().map(e -> e.getAsString()).toList();
 			return new Breeding(items,
 					GsonHelper.getAsInt(json, "cooldown_ticks", 6000),
-					GsonHelper.getAsDouble(json, "baby_scale", 0.5));
+					GsonHelper.getAsDouble(json, "baby_scale", 1.0));
 		}
 	}
 
@@ -171,6 +186,9 @@ public record Species(
 		String species = GsonHelper.getAsString(json, "species", fileName);
 		List<String> biomes = GsonHelper.getAsJsonArray(json, "biomes").asList().stream()
 				.map(e -> e.getAsString()).toList();
+		List<String> excludeBiomes = GsonHelper
+				.getAsJsonArray(json, "exclude_biomes", new com.google.gson.JsonArray())
+				.asList().stream().map(e -> e.getAsString()).toList();
 		var group = GsonHelper.getAsJsonArray(json, "group_size", null);
 		String tame = GsonHelper.getAsString(json, "tame_item", "");
 		// "size_scale" (Phase 2 name) and "scale" (Phase 1 name) are the same knob
@@ -181,6 +199,8 @@ public record Species(
 				entity,
 				species,
 				biomes,
+				excludeBiomes,
+				GsonHelper.getAsBoolean(json, "aquatic", false),
 				GsonHelper.getAsInt(json, "weight", -1),
 				group == null ? -1 : group.get(0).getAsInt(),
 				group == null ? -1 : group.get(1).getAsInt(),
@@ -225,16 +245,26 @@ public record Species(
 	}
 
 	public boolean matchesBiome(Holder<Biome> biome) {
+		// exclusions are checked first and are absolute: "#is_river but not frozen"
+		for (String entry : excludeBiomes) {
+			if (matchesEntry(entry, biome)) {
+				return false;
+			}
+		}
 		for (String entry : biomes) {
-			if (entry.startsWith("#")) {
-				if (biome.is(TagKey.create(Registries.BIOME, Identifier.parse(entry.substring(1))))) {
-					return true;
-				}
-			} else if (biome.is(ResourceKey.create(Registries.BIOME, Identifier.parse(entry)))) {
+			if (matchesEntry(entry, biome)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/** '#' prefix is a biome tag, anything else a raw biome id. */
+	private static boolean matchesEntry(String entry, Holder<Biome> biome) {
+		if (entry.startsWith("#")) {
+			return biome.is(TagKey.create(Registries.BIOME, Identifier.parse(entry.substring(1))));
+		}
+		return biome.is(ResourceKey.create(Registries.BIOME, Identifier.parse(entry)));
 	}
 
 	public int groupSize(RandomSource random) {

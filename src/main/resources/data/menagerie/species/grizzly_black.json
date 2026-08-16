@@ -1,5 +1,5 @@
 {
-	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players \u2014 unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players — unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions.",
 	"entity": "menagerie:grizzly",
 	"species": "black",
 	"biomes": [
@@ -37,6 +37,6 @@
 			"minecraft:honey_bottle"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	}
 }

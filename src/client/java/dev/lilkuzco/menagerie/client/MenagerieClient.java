@@ -13,10 +13,10 @@ import dev.lilkuzco.menagerie.client.model.VultureModel;
 import dev.lilkuzco.menagerie.entity.MenagerieEntities;
 import java.util.Set;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 import net.minecraft.client.model.BabyModelTransform;
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 
 public class MenagerieClient implements ClientModInitializer {
 	private static final BabyModelTransform BABY = new BabyModelTransform(Set.of("head"));
@@ -70,33 +70,33 @@ public class MenagerieClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(SNAKE, SnakeModel::createBodyLayer);
 		ModelLayerRegistry.registerModelLayer(SNAKE_BABY, () -> SnakeModel.createBodyLayer().apply(BABY));
 
-		EntityRendererRegistry.register(MenagerieEntities.GORILLA, GorillaRenderer::new);
-		EntityRendererRegistry.register(MenagerieEntities.CROCODILE, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.GORILLA, GorillaRenderer::new);
+		EntityRenderers.register(MenagerieEntities.CROCODILE, context -> new SpeciesRenderer<>(context,
 				new CrocodileModel(context.bakeLayer(CROCODILE)), new CrocodileModel(context.bakeLayer(CROCODILE_BABY)),
 				0.8F, (entity, state) -> state.lungeTicks = entity.clientLungeTicks));
-		EntityRendererRegistry.register(MenagerieEntities.TORTOISE, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.TORTOISE, context -> new SpeciesRenderer<>(context,
 				new TortoiseModel(context.bakeLayer(TORTOISE)), new TortoiseModel(context.bakeLayer(TORTOISE_BABY)),
 				0.6F, (entity, state) -> state.shelled = entity.isShelled()));
-		EntityRendererRegistry.register(MenagerieEntities.LEOPARD, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.LEOPARD, context -> new SpeciesRenderer<>(context,
 				new LeopardModel(context.bakeLayer(LEOPARD)), new LeopardModel(context.bakeLayer(LEOPARD_BABY)),
 				0.6F, (entity, state) -> {
 					state.crouching = entity.isCrouchingPose();
 					state.pounceTicks = entity.clientPounceTicks;
 				}));
-		EntityRendererRegistry.register(MenagerieEntities.HIPPO, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.HIPPO, context -> new SpeciesRenderer<>(context,
 				new HippoModel(context.bakeLayer(HIPPO)), new HippoModel(context.bakeLayer(HIPPO_BABY)),
 				1.0F, (entity, state) -> state.yawnTicks = entity.clientYawnTicks));
-		EntityRendererRegistry.register(MenagerieEntities.GRIZZLY, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.GRIZZLY, context -> new SpeciesRenderer<>(context,
 				new GrizzlyModel(context.bakeLayer(GRIZZLY)), new GrizzlyModel(context.bakeLayer(GRIZZLY_BABY)),
 				0.9F, (entity, state) -> {
 					state.swipeTicks = entity.clientSwipeTicks;
 					state.bearSleeping = entity.isBearSleeping();
 				}));
-		EntityRendererRegistry.register(MenagerieEntities.VULTURE, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.VULTURE, context -> new SpeciesRenderer<>(context,
 				new VultureModel(context.bakeLayer(VULTURE)), new VultureModel(context.bakeLayer(VULTURE_BABY)),
 				0.5F, (entity, state) -> state.flying = entity.isFlyingState()));
-		EntityRendererRegistry.register(MenagerieEntities.LION, LionRenderer::new);
-		EntityRendererRegistry.register(MenagerieEntities.SNAKE, context -> new SpeciesRenderer<>(context,
+		EntityRenderers.register(MenagerieEntities.LION, LionRenderer::new);
+		EntityRenderers.register(MenagerieEntities.SNAKE, context -> new SpeciesRenderer<>(context,
 				new SnakeModel(context.bakeLayer(SNAKE)), new SnakeModel(context.bakeLayer(SNAKE_BABY)),
 				0.4F, (entity, state) -> {
 					state.coiled = entity.isCoiled();

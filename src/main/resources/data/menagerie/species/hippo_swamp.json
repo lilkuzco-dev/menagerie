@@ -1,11 +1,14 @@
 {
-	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river \u2014 registry proves itself again. Phase 3: breed_item melon (also the cage bait); cage_tier 2. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-4, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river — registry proves itself again. Phase 3: breed_item melon (also the cage bait); cage_tier 2. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-4, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. ECOLOGY 0.4.2: was the raw ids minecraft:swamp + mangrove_swamp, which silently excluded every Terralith swamp. #c:is_swamp carries both vanilla swamps (Fabric API) and Terralith's. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions. TERRALITH PASS: excludes Terralith's ice_marsh — a frozen swamp is no more a hippo biome than a frozen river.",
 	"entity": "menagerie:hippo",
 	"species": "swamp",
 	"biomes": [
-		"minecraft:swamp",
-		"minecraft:mangrove_swamp"
+		"#c:is_swamp"
 	],
+	"exclude_biomes": [
+		"terralith:ice_marsh"
+	],
+	"aquatic": true,
 	"group_size": [
 		2,
 		4
@@ -33,6 +36,6 @@
 			"minecraft:melon_slice"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	}
 }

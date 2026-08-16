@@ -20,7 +20,7 @@
 			"minecraft:rabbit"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	},
 	"diet": {
 		"hunts": [
@@ -50,5 +50,5 @@
 		"menagerie:textures/entity/lion/body_14.png"
 	],
 	"guide_blurb": "Bigger, darker, and a long way from the grass.",
-	"_tuning_notes": "Barbary-type lion for badlands: the darker half of the source texture set, slightly larger and tougher. Same entity class and pride logic as the savanna lion \u2014 this is the registry doing the work, not Java. RARITY: tier 'rare', pride 3-4, nearby_cap 6."
+	"_tuning_notes": "Barbary-type lion for badlands: the darker half of the source texture set, slightly larger and tougher. Same entity class and pride logic as the savanna lion — this is the registry doing the work, not Java. RARITY: tier 'rare', pride 3-4, nearby_cap 6. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions."
 }

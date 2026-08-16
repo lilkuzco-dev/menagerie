@@ -119,6 +119,47 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.2 — Reliability audit + full sweep (2026-08-16)
+
+Two bugs were reported from the live server; the response was a sweep of every species,
+every asset path and every spawn rule, plus build-time gates so the whole class cannot
+come back. Full findings in [`AUDIT.md`](AUDIT.md).
+
+- **Animals no longer render as missing-texture checkerboards on a dedicated server.**
+  Species definitions are a datapack, so a *remote* client's registry is empty and every
+  animal fell through to a fallback texture path that vanilla renamed. Skins are now
+  resolved on the server and synced to the client, which never needs the registry to
+  draw an animal, and both fallbacks point at a texture this mod actually ships.
+- **Hippos and crocodiles spawn at the water line, not the sea floor.** Their placement
+  performed no depth test, so any submerged position in a river column was valid. They
+  now require open air close above and a floor close below.
+- **Babies are vanilla-sized.** `baby_scale` was multiplying the SCALE attribute on top
+  of the already-halved baby model, rendering calves at about a quarter of adult size
+  and over-shrinking their hitboxes. It now defaults to 1.0 = vanilla proportions.
+- **Every species is visible to Terralith.** Seven used raw biome ids that match no
+  Terralith biome; they now key off tags Terralith extends. Per-species resolved
+  coverage is in [`docs/biome-coverage.md`](docs/biome-coverage.md).
+- **Ecology fixes:** gorillas moved from windswept hills and a snowy grove to montane
+  jungle; snow leopards excluded from Terralith's volcanic peaks and tropical jungle;
+  hippos and crocodiles excluded from frozen rivers and ice marsh; reptiles excluded
+  from snowy badlands.
+- **Two new build gates.** `assetAudit` proves every asset path the mod can request
+  exists in the shipping jar; `spawnLint` proves every species' spawn rules stay inside
+  its ecology. Both fail `./gradlew build` and both assert their own anchors so they
+  cannot silently pass by matching nothing.
+- **Cage releases are transactional.** A captured animal's NBT is cleared only after
+  its full entity/passenger tree successfully returns to the world. Invalid or
+  incompatible data leaves the cage closed and recoverable instead of silently
+  deleting the occupant; wrong-tier breakouts have the same protection.
+- **Live JSON stat tuning now reaches existing animals.** A successful `/reload`
+  reapplies health, speed, attack, scale, and knockback while preserving each animal's
+  health percentage. Adding forage or breeding data can also attach its goal to animals
+  already in the world.
+- Migrated deprecated chunk, block-entity-data, and renderer calls to the Minecraft
+  26.2 APIs, fixed the vulture movement controller's raw type, and enabled permanent
+  deprecation/unchecked compiler lint.
+- Updated the mod metadata, which still described only the four-animal Phase 1 roster.
+
 ### 0.4.1 — Post-release audit (2026-08-16)
 
 No new content. 0.4.0 was audited after shipping and every item here was a defect in the

@@ -54,6 +54,22 @@ public abstract class SpeciesMob extends TamableAnimal {
 	/** Rare-variant name rolled once at spawn (see Species.VariantRoll); "" for the common coat. */
 	private static final EntityDataAccessor<String> VARIANT =
 			SynchedEntityData.defineId(SpeciesMob.class, EntityDataSerializers.STRING);
+	/**
+	 * The resolved skin, decided on the server and synced. Species definitions are a
+	 * DATAPACK: a client attached to a dedicated server never loads {@code data/} and its
+	 * SpeciesRegistry stays empty, so resolving the texture client-side returned the
+	 * fallback for every animal. Syncing the answer means the client never needs the
+	 * registry to draw an animal.
+	 */
+	private static final EntityDataAccessor<String> TEXTURE =
+			SynchedEntityData.defineId(SpeciesMob.class, EntityDataSerializers.STRING);
+
+	/**
+	 * Shipped by this mod, so a fallback can never be the missing-texture checkerboard.
+	 * A vanilla path was used here before and Minecraft renamed it out from under us.
+	 */
+	public static final Identifier MISSING_TEXTURE =
+			dev.lilkuzco.menagerie.Menagerie.id("textures/entity/missing.png");
 
 	protected SpeciesMob(EntityType<? extends SpeciesMob> type, Level level) {
 		super(type, level);
@@ -73,6 +89,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 		super.defineSynchedData(builder);
 		builder.define(SPECIES, "");
 		builder.define(VARIANT, "");
+		builder.define(TEXTURE, "");
 	}
 
 	// ---------- species plumbing ----------
@@ -92,6 +109,8 @@ public abstract class SpeciesMob extends TamableAnimal {
 	public void setSpecies(Species species, boolean healToFull) {
 		this.entityData.set(SPECIES, species.name());
 		applySpeciesAttributes(species);
+		appliedSpeciesRevision = SpeciesRegistry.revision();
+		refreshTexture();
 		if (healToFull) {
 			setHealth(getMaxHealth());
 		}
@@ -103,6 +122,8 @@ public abstract class SpeciesMob extends TamableAnimal {
 		getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(species.attack());
 		double scale = species.scale();
 		if (isBaby() && species.breeding() != null) {
+			// on TOP of the halved baby mesh and vanilla's age scaling, so 1.0 is the
+			// neutral value here and anything lower shrinks the calf a second time
 			scale *= species.breeding().babyScale();
 		}
 		getAttribute(Attributes.SCALE).setBaseValue(scale);
@@ -130,15 +151,54 @@ public abstract class SpeciesMob extends TamableAnimal {
 		if (roll != null) {
 			setVariantName(roll.name());
 		}
+		refreshTexture();
 	}
 
+	/**
+	 * The skin to draw. Read straight off synced entity data so it is correct on a
+	 * remote client, which has no species registry of its own.
+	 */
 	public Identifier texture() {
+		String synced = this.entityData.get(TEXTURE);
+		if (!synced.isEmpty()) {
+			return Identifier.parse(synced);
+		}
+		// server side (or singleplayer) before the first refresh; never a checkerboard
+		Identifier resolved = resolveTexture();
+		return resolved != null ? resolved : MISSING_TEXTURE;
+	}
+
+	/**
+	 * Resolve this animal's skin from the live registry. Server-side only — override to
+	 * add a per-individual coat table (see GorillaEntity); the result is what gets synced.
+	 *
+	 * @return null when no species is known, which is the caller's cue to fall back.
+	 */
+	protected @Nullable Identifier resolveTexture() {
 		Species species = species();
 		if (species == null) {
-			return Identifier.fromNamespaceAndPath("minecraft", "textures/entity/pig/temperate_pig.png");
+			return null;
 		}
 		Species.VariantRoll variant = species.variant(getVariantName());
 		return variant != null ? variant.texture() : species.texture();
+	}
+
+	/**
+	 * The raw synced skin string, empty when the server has not published one yet.
+	 * Exposed so a test can prove the value crossed the wire rather than being
+	 * re-derived locally from a registry the client is not guaranteed to have.
+	 */
+	public String syncedTextureId() {
+		return this.entityData.get(TEXTURE);
+	}
+
+	/** Recompute the synced skin. No-op on the client, which is never the authority. */
+	protected void refreshTexture() {
+		if (level().isClientSide()) {
+			return;
+		}
+		Identifier resolved = resolveTexture();
+		this.entityData.set(TEXTURE, resolved != null ? resolved.toString() : "");
 	}
 
 	// ---------- spawn ----------
@@ -190,6 +250,15 @@ public abstract class SpeciesMob extends TamableAnimal {
 		if (!checkSpeciesGate(type, level, spawnReason, pos, random)) {
 			return false;
 		}
+		return groundSpawnOk(level, pos);
+	}
+
+	/**
+	 * The dry-land half of the placement rules: a block an animal can stand on, in
+	 * daylight. Shared with the waterline placement so a bank-dwelling animal that
+	 * happens to spawn on dry ground is held to exactly the same standard.
+	 */
+	public static boolean groundSpawnOk(LevelAccessor level, BlockPos pos) {
 		BlockState ground = level.getBlockState(pos.below());
 		boolean groundOk = ground.is(BlockTags.ANIMALS_SPAWNABLE_ON) || ground.is(BlockTags.SNOW)
 				|| ground.is(BlockTags.BASE_STONE_OVERWORLD) || ground.is(BlockTags.LEAVES)
@@ -301,6 +370,8 @@ public abstract class SpeciesMob extends TamableAnimal {
 	// ---------- forage / contentment (generic; driven by the species "forage" block) ----------
 	private long contentUntil;
 	private boolean forageGoalAttached;
+	private boolean breedGoalAttached;
+	private long appliedSpeciesRevision = -1;
 	/** Tracks age transitions so breeding's baby_scale is actually applied and undone. */
 	private boolean lastBabyState;
 
@@ -323,6 +394,19 @@ public abstract class SpeciesMob extends TamableAnimal {
 	@Override
 	protected void customServerAiStep(net.minecraft.server.level.ServerLevel level) {
 		super.customServerAiStep(level);
+		// Data-pack reloads change the registry in place. Existing mobs must adopt the
+		// new numeric attributes too, while retaining the same fraction of health.
+		if (appliedSpeciesRevision != SpeciesRegistry.revision()) {
+			Species current = species();
+			if (current != null) {
+				float healthFraction = getMaxHealth() > 0 ? getHealth() / getMaxHealth() : 1.0F;
+				applySpeciesAttributes(current);
+				setHealth(getMaxHealth() * healthFraction);
+			}
+			// a reload can repoint a species at a different skin, so re-publish it too
+			refreshTexture();
+			appliedSpeciesRevision = SpeciesRegistry.revision();
+		}
 		// a bred calf is created before vanilla flips it to a baby, and it grows up later:
 		// re-apply on every transition or baby_scale would be a knob that does nothing
 		if (isBaby() != lastBabyState) {
@@ -336,20 +420,17 @@ public abstract class SpeciesMob extends TamableAnimal {
 		}
 		// species with a forage block get the goal attached lazily (species is data,
 		// unknown at registerGoals time) — zero Java for future foraging animals
-		if (!forageGoalAttached) {
+		Species species = species();
+		if (!forageGoalAttached && species != null && species.forage() != null) {
+			this.goalSelector.addGoal(6, new dev.lilkuzco.menagerie.entity.ai.ForageGoal(this));
 			forageGoalAttached = true;
-			Species species = species();
-			if (species != null && species.forage() != null) {
-				this.goalSelector.addGoal(6, new dev.lilkuzco.menagerie.entity.ai.ForageGoal(this));
-			}
-			// data-driven breeding: any species declaring a "breeding" block gets the
-			// vanilla breed goal, so adding a breedable animal stays a JSON-only change
-			// priority 2 deliberately: every animal here strolls at 3 or 4, and a goal that
-			// loses the MOVE flag to wandering never gets to breed (vanilla puts BreedGoal
-			// above wander for the same reason). Melee stays at 1, so fights still win.
-			if (species != null && species.breeding() != null && !hasBreedGoal()) {
-				this.goalSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.BreedGoal(this, 1.0));
-			}
+		}
+		// Data-driven breeding: any species declaring a "breeding" block gets the
+		// vanilla breed goal, so adding a breedable animal remains a JSON-only change.
+		// Keep checking until one exists so adding the block via /reload works too.
+		if (!breedGoalAttached && species != null && species.breeding() != null && !hasBreedGoal()) {
+			this.goalSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.BreedGoal(this, 1.0));
+			breedGoalAttached = true;
 		}
 	}
 
@@ -432,5 +513,9 @@ public abstract class SpeciesMob extends TamableAnimal {
 			applySpeciesAttributes(species);
 			setHealth(getMaxHealth() * healthFraction);
 		}
+		// animals saved before the skin was synced carry an empty TEXTURE; resolving on
+		// load is what repairs an existing world without touching its entity data
+		refreshTexture();
+		appliedSpeciesRevision = SpeciesRegistry.revision();
 	}
 }

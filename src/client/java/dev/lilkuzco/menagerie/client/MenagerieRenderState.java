@@ -6,7 +6,8 @@ import net.minecraft.world.entity.AnimationState;
 
 /** Shared render state for all Menagerie animals; unused fields stay at defaults. */
 public class MenagerieRenderState extends LivingEntityRenderState {
-	public Identifier texture = Identifier.withDefaultNamespace("textures/entity/pig/temperate_pig.png");
+	/** Our own shipped placeholder, so an unextracted state can never draw a checkerboard. */
+	public Identifier texture = dev.lilkuzco.menagerie.entity.SpeciesMob.MISSING_TEXTURE;
 	// gorilla — keyframe animation states, copied from the entity each frame
 	public boolean silverback;
 	public boolean sittingPose;

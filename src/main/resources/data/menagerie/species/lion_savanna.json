@@ -20,7 +20,7 @@
 			"minecraft:rabbit"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	},
 	"diet": {
 		"hunts": [
@@ -50,5 +50,5 @@
 		"menagerie:textures/entity/lion/body_7.png"
 	],
 	"guide_blurb": "The pride does the hunting. The mane does the arguing.",
-	"_tuning_notes": "Savanna lion, from the Animal Garden - Lion source set (public domain). One maned male per pride is assigned at group spawn, exactly like the gorilla's silverback, and the mane part is only rendered for him \u2014 the pride leader is readable at a glance. special.pride_courage is how many pride members it takes before a lion will start on a HEALTHY player; below that it behaves like the leopard and only takes weakened or small prey, which keeps a lone lion from being a savanna death sentence. Fur is a per-individual pick from the textures list. RARITY: tier 'rare' (panda-class weight) with pride 3-4 and nearby_cap 6."
+	"_tuning_notes": "Savanna lion, from the Animal Garden - Lion source set (public domain). One maned male per pride is assigned at group spawn, exactly like the gorilla's silverback, and the mane part is only rendered for him — the pride leader is readable at a glance. special.pride_courage is how many pride members it takes before a lion will start on a HEALTHY player; below that it behaves like the leopard and only takes weakened or small prey, which keeps a lone lion from being a savanna death sentence. Fur is a per-individual pick from the textures list. RARITY: tier 'rare' (panda-class weight) with pride 3-4 and nearby_cap 6. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions."
 }

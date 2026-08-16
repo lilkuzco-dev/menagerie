@@ -1,5 +1,5 @@
 {
-	"_tuning_notes": "Jungle leopard. Stalker: crouch-approach, pounce with leap. Prey = chickens, rabbits, baby animals; players only when below half health (opportunist, hardcoded); flees when 2+ players within 8 blocks. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 2). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Jungle leopard. Stalker: crouch-approach, pounce with leap. Prey = chickens, rabbits, baby animals; players only when below half health (opportunist, hardcoded); flees when 2+ players within 8 blocks. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 2). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions.",
 	"entity": "menagerie:leopard",
 	"species": "leopard",
 	"biomes": [
@@ -34,6 +34,6 @@
 			"minecraft:beef"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	}
 }

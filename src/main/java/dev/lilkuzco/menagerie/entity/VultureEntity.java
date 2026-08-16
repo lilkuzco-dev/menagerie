@@ -206,11 +206,11 @@ public class VultureEntity extends SpeciesMob {
 					driftTimer = 0;
 					BlockPos shifted = blockPosition().offset(getRandom().nextInt(65) - 32, 0,
 							getRandom().nextInt(65) - 32);
-					if (level.hasChunkAt(shifted)) { // never sync-load chunks for a drift target
+					if (level.isLoaded(shifted)) { // never sync-load chunks for a drift target
 						anchorPoint = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, shifted)
 								.above(20 + getRandom().nextInt(10));
 					}
-				} else if (anchorPoint != null && tickCount % 100 == 0 && level.hasChunkAt(anchorPoint)) {
+				} else if (anchorPoint != null && tickCount % 100 == 0 && level.isLoaded(anchorPoint)) {
 					BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, anchorPoint);
 					anchorPoint = ground.above(20 + getRandom().nextInt(10));
 				}
@@ -310,7 +310,7 @@ public class VultureEntity extends SpeciesMob {
 	}
 
 	/** Phantom-style steering toward moveTargetPoint (banked, velocity-blended). */
-	private static class VultureMoveControl extends MoveControl {
+	private static class VultureMoveControl extends MoveControl<VultureEntity> {
 		private final VultureEntity vulture;
 		private float speed = 0.1F;
 

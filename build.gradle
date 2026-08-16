@@ -45,6 +45,63 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 25
+	it.options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+// ---------------------------------------------------------------------------
+// Ship gates. Both run against the REMAPPED jar — the artifact that actually
+// ships — and both assert their own anchors, so a refactor that stops them
+// finding anything fails the build instead of passing vacuously.
+//
+//   assetAudit  every asset path the mod can request must exist  (checkerboards)
+//   spawnLint   every species' spawn rules must match its ecology (ocean hippos)
+// ---------------------------------------------------------------------------
+def vanillaJar = new File(gradle.gradleUserHomeDir,
+		"caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar")
+
+tasks.register('assetAudit', Exec) {
+	group = 'verification'
+	description = 'Fails the build on any asset path the mod could request but does not ship'
+	// this loom emits the shipping artifact straight from `jar` (no separate remap task)
+	dependsOn 'jar'
+	inputs.dir 'src'
+	inputs.file 'tools/asset-audit.py'
+	doFirst {
+		commandLine 'python3', 'tools/asset-audit.py',
+				'--jar', tasks.named('jar').get().archiveFile.get().asFile.absolutePath,
+				'--vanilla-jar', vanillaJar.absolutePath
+	}
+}
+
+tasks.register('spawnLint', Exec) {
+	group = 'verification'
+	description = 'Fails the build on a species whose spawn rules leave its ecology'
+	inputs.dir 'src/main/resources/data/menagerie'
+	inputs.file 'src/main/java/dev/lilkuzco/menagerie/entity/MenagerieEntities.java'
+	inputs.file 'tools/spawn-lint.py'
+	commandLine 'python3', 'tools/spawn-lint.py'
+}
+
+// The multiplayer render battery boots a throwaway DEDICATED server inside
+// build/run-gametest. A dedicated server refuses to start without an accepted EULA,
+// and build/ is disposable, so the acceptance has to be re-stamped each run.
+tasks.matching { it.name == 'runGametest' }.configureEach {
+	doFirst {
+		def runDir = file('build/run-gametest')
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text =
+				"# written by the gametest run config; build/run-gametest is a throwaway dev server\n" +
+				"eula=true\n"
+	}
+}
+
+tasks.named('check') {
+	dependsOn 'assetAudit', 'spawnLint'
+}
+// `build` runs `check`, but wire it explicitly too so `gradlew build` can never
+// produce a jar that skipped the gates.
+tasks.named('build') {
+	dependsOn 'assetAudit', 'spawnLint'
 }
 
 java {

@@ -1,10 +1,16 @@
 {
-	"_tuning_notes": "Savanna/badlands tortoise. worldgen_only true = Untamed Wilds style: spawns with newly generated chunks only, never naturally respawns \u2014 killing them permanently empties the area, and they drop nothing. shell_armor/shell_ticks tune the retreat (+8 armor, immobile, 10s). Breeds with sweet berries (breed_item), never tames. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 4). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Savanna/badlands tortoise. worldgen_only true = Untamed Wilds style: spawns with newly generated chunks only, never naturally respawns — killing them permanently empties the area, and they drop nothing. shell_armor/shell_ticks tune the retreat (+8 armor, immobile, 10s). Breeds with sweet berries (breed_item), never tames. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 4). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. ECOLOGY 0.4.2: gained the arid and beach families the spec calls for (desert via #c:is_desert so Terralith deserts count; beaches minus snowy). BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions. TERRALITH PASS: excludes Terralith's snowy_badlands (a cold-blooded reptile).",
 	"entity": "menagerie:tortoise",
 	"species": "savanna",
 	"biomes": [
 		"#minecraft:is_savanna",
-		"#minecraft:is_badlands"
+		"#minecraft:is_badlands",
+		"#c:is_desert",
+		"#minecraft:is_beach"
+	],
+	"exclude_biomes": [
+		"minecraft:snowy_beach",
+		"terralith:snowy_badlands"
 	],
 	"group_size": [
 		1,
@@ -29,6 +35,6 @@
 			"minecraft:sweet_berries"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	}
 }

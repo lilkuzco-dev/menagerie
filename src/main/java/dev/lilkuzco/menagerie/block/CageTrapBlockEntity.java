@@ -155,7 +155,12 @@ public class CageTrapBlockEntity extends BlockEntity {
 	}
 
 	private void breakout(ServerLevel level, BlockPos pos) {
-		spawnCaptured(level, pos, null);
+		if (!spawnCaptured(level, pos, null)) {
+			// Keep the occupant recoverable instead of destroying the cage and its data.
+			breakoutTicks = -1;
+			setChanged();
+			return;
+		}
 		level.playSound(null, pos, SoundEvents.IRON_GOLEM_DAMAGE, SoundSource.BLOCKS, 1.4F, 0.7F);
 		level.destroyBlock(pos, false); // the cage is wrecked, drops nothing
 	}
@@ -164,20 +169,19 @@ public class CageTrapBlockEntity extends BlockEntity {
 		if (captured == null) {
 			return;
 		}
-		spawnCaptured(level, pos, player);
+		if (!spawnCaptured(level, pos, player)) {
+			return;
+		}
 		level.playSound(null, pos, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, 1.0F);
 		level.setBlockAndUpdate(pos, getBlockState().setValue(CageTrapBlock.CLOSED, false));
 	}
 
-	private void spawnCaptured(ServerLevel level, BlockPos pos, @Nullable Player player) {
+	/** @return true only after the full entity/passenger tree has entered the world. */
+	private boolean spawnCaptured(ServerLevel level, BlockPos pos, @Nullable Player player) {
 		if (captured == null) {
-			return;
+			return false;
 		}
-		CompoundTag tag = captured;
-		this.captured = null;
-		this.breakoutTicks = -1;
-		setChanged();
-		Entity entity = EntityType.loadEntityRecursive(tag, level,
+		Entity entity = EntityType.loadEntityRecursive(captured.copy(), level,
 				new net.minecraft.world.entity.EntitySpawnRequest(EntitySpawnReason.LOAD, false), e -> {
 			// place just outside the cage, facing whoever opened it
 			BlockPos front = player != null
@@ -185,13 +189,16 @@ public class CageTrapBlockEntity extends BlockEntity {
 							player.position().subtract(Vec3.atCenterOf(pos)).with(net.minecraft.core.Direction.Axis.Y, 0)))
 					: pos.above();
 			e.snapTo(front.getX() + 0.5, front.getY(), front.getZ() + 0.5, e.getYRot(), e.getXRot());
-			return e;
-		});
-		if (entity != null) {
-			level.addFreshEntity(entity);
-		} else {
+					return e;
+				});
+		if (entity == null || !level.tryAddFreshEntityWithPassengers(entity)) {
 			Menagerie.LOGGER.warn("Cage at {} failed to restore its captured animal", pos);
+			return false;
 		}
+		this.captured = null;
+		this.breakoutTicks = -1;
+		setChanged();
+		return true;
 	}
 
 	// ---------- persistence (also rides the item via BLOCK_ENTITY_DATA) ----------

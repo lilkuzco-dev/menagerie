@@ -1,12 +1,21 @@
 {
-	"_tuning_notes": "Snow leopard: grove + peaks, white coat, a bit tougher for the cold heights. Proves cold-biome species routing alongside the mountain gorilla. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 2). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Snow leopard: grove + peaks, white coat, a bit tougher for the cold heights. Proves cold-biome species routing alongside the mountain gorilla. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 2). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. ECOLOGY 0.4.2: was four raw peak ids, so no Terralith peak qualified. #minecraft:is_mountain covers them plus Terralith's; meadow and cherry grove are excluded as too low and too warm for a snow leopard. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions. TERRALITH PASS: Terralith files volcanic craters, ashen savanna, savanna slopes and even tropical jungle under #minecraft:is_mountain. A snow leopard in any of them is the same class of error as a hippo on the sea floor, so they are excluded.",
 	"entity": "menagerie:leopard",
 	"species": "snow",
 	"biomes": [
-		"minecraft:grove",
-		"minecraft:jagged_peaks",
-		"minecraft:frozen_peaks",
-		"minecraft:snowy_slopes"
+		"#minecraft:is_mountain",
+		"minecraft:grove"
+	],
+	"exclude_biomes": [
+		"minecraft:meadow",
+		"minecraft:cherry_grove",
+		"terralith:volcanic_crater",
+		"terralith:volcanic_peaks",
+		"terralith:caldera",
+		"terralith:ashen_savanna",
+		"terralith:savanna_slopes",
+		"terralith:tropical_jungle",
+		"terralith:painted_mountains"
 	],
 	"group_size": [
 		1,
@@ -37,6 +46,6 @@
 			"minecraft:beef"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	}
 }

@@ -1,10 +1,13 @@
 {
-	"_tuning_notes": "Desert viper: coiled and near-motionless until a player is within 4 blocks (rattle warning), strikes only inside 2 after warning \u2014 careful players never get bitten. venom block = effect applied on strike (amplifier 1 = Poison II, seconds 8). Slithers from sprinters. worldgen_only + no drops: ambience like the tortoise. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal \u2014 its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
+	"_tuning_notes": "Desert viper: coiled and near-motionless until a player is within 4 blocks (rattle warning), strikes only inside 2 after warning — careful players never get bitten. venom block = effect applied on strike (amplifier 1 = Poison II, seconds 8). Slithers from sprinters. worldgen_only + no drops: ambience like the tortoise. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal — its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. ECOLOGY 0.4.2: minecraft:desert -> #c:is_desert so Terralith's deserts count. TERRALITH PASS: excludes Terralith's snowy_badlands (a cold-blooded reptile).",
 	"entity": "menagerie:snake",
 	"species": "viper",
 	"biomes": [
-		"minecraft:desert",
+		"#c:is_desert",
 		"#minecraft:is_badlands"
+	],
+	"exclude_biomes": [
+		"terralith:snowy_badlands"
 	],
 	"group_size": [
 		1,

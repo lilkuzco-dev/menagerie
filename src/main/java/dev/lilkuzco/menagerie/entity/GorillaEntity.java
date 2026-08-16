@@ -176,14 +176,14 @@ public class GorillaEntity extends SpeciesMob {
 	 * a translucent overlay layer, so it composes with whichever fur this gorilla drew.
 	 */
 	@Override
-	public Identifier texture() {
+	protected @Nullable Identifier resolveTexture() {
 		Species species = species();
 		if (species == null || species.textures().isEmpty()) {
-			return super.texture();
+			return super.resolveTexture();
 		}
-		// a rare coat outranks the fur table — super.texture() resolves variant_rolls
+		// a rare coat outranks the fur table — super.resolveTexture() resolves variant_rolls
 		if (hasRareVariant() && species.variant(getVariantName()) != null) {
-			return super.texture();
+			return super.resolveTexture();
 		}
 		List<Identifier> options = species.textures();
 		int pick = Math.floorMod(getUUID().hashCode(), options.size());

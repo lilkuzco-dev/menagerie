@@ -1,3 +1,85 @@
+# Menagerie 0.4.2 — Reliability audit + full sweep
+
+Date: 2026-08-16. Target: Minecraft 26.2, Fabric Loader 0.19.3,
+Fabric API 0.157.0+26.2, Loom 1.17, Gradle 9.5.1, JDK 25.
+
+## Full-sweep audit (asset resolution, spawn ecology, baby scale)
+
+Driven by two live-server field reports — a checkerboard hippo and a hippo on the
+ocean floor. Full findings, matrices and reasoning: **`AUDIT.md`**.
+
+- Checkerboard root cause — **FOUND AND FIXED**. Not missing art: every menagerie
+  texture shipped correctly. Species are a *datapack*, so a client on a **dedicated**
+  server has an empty `SpeciesRegistry` and fell through to a fallback pointing at
+  `minecraft:textures/entity/pig/temperate_pig.png` — which does not exist in 26.2
+  (vanilla ships `pig/pig_temperate.png`). This hit **every animal**, and singleplayer
+  gametests could never see it because their integrated server shares the renderer's
+  JVM. Skins are now resolved server-side and synced; both fallbacks point at a shipped
+  `menagerie:textures/entity/missing.png`.
+- Multiplayer render battery — **PASS 34/34**. New `MenagerieMultiplayerRenderTest`
+  drives a real dedicated server over a real client connection: 16 species × adult/baby
+  plus 2 forced albino rolls. Per subject it asserts the skin arrived as synced entity
+  data, is not the MISSING placeholder, matches what was synced, and is a skin that
+  species may wear. Screenshots inspected: no checkerboards, no wrong-skin-on-wrong-
+  species, no smeared UVs.
+- Ocean-floor hippo — **FOUND AND FIXED**. `SpawnPlacementTypes.NO_RESTRICTIONS`
+  performs no ground/depth/light test and the predicate accepted any position
+  containing water, so every submerged position in a river column was valid, including
+  the bottom. Replaced with a real waterline test (air within 3 above, sturdy floor
+  within 3 below).
+- Baby size — **FOUND AND FIXED**. `baby_scale: 0.5` multiplied the SCALE attribute on
+  top of vanilla's `BabyModelTransform` (which already halves the body), rendering
+  calves at ~¼ adult size and over-shrinking their hitboxes. Default is now
+  1.0 = vanilla baby proportions across all 13 breeding species; the battery includes a
+  vanilla-cow-calf calibration shot and asserts SCALE ≥ 0.95 (measured 1.0).
+- Terralith coverage — **FIXED**. Seven species used raw biome ids and so matched *no*
+  Terralith biome. Now keyed off tags Terralith extends (`#minecraft:is_*`) or the
+  conventional tags Fabric API supplies and Terralith extends (`#c:is_swamp`,
+  `#c:is_desert`). Full resolved per-species coverage: `docs/biome-coverage.md`.
+- Ecology mismatches — **FIXED**: gorillas out of windswept hills and a snowy grove
+  into montane jungle; snow leopards out of Terralith's volcanic craters, calderas and
+  tropical jungle; hippos/crocodiles out of frozen rivers and ice marsh; reptiles out
+  of snowy badlands.
+- Build-time gates — **GREEN**. `assetAudit` (runs against the shipping jar) and
+  `spawnLint` both gate `build`, assert their own anchors, and were negative-tested:
+  deleting a texture, cross-assigning a skin, giving the hippo an ocean tag, and adding
+  an undeclared numbered texture family each fail the build (the last caught this
+  audit's own new test file).
+
+## Reliability audit
+
+- Clean build — **PASS** with deprecation and unchecked lint enabled and zero
+  warnings. Every shipped JSON file parses, all 16 species pass range/entity checks,
+  and every species texture, Field Guide icon, model, and sound reference resolves —
+  now proven automatically by `tools/asset-audit.py` rather than by inspection.
+- Dedicated server — **PASS** on a fresh world. Menagerie 0.4.2 loads 16 species
+  across all 9 animals, both alone and with its optional Warfront crossover active.
+- Entity registration — **PASS**: gorilla, crocodile, tortoise, leopard, hippo,
+  grizzly, vulture, lion, and snake all summon; census output resolves their expected
+  species and synchronized state markers.
+- Spawn cap — **PASS** through the real predicate in a jungle: gorilla attempts were
+  100/100 allowed below the cap and 0/100 with eight nearby (the configured cap).
+- Hot reload — **PASS**: a live river hippo changed from 60 to 80 max health after a
+  datapack `/reload`; reverting to 60 preserved its 50% health exactly (40 → 30).
+- Cage success path — **PASS**: sweet-berry bait captured a tortoise, stored its full
+  NBT, removed the world entity, and restored it when the cage opened.
+- Cage failure path — **PASS**: deliberately invalid captured entity data logged a
+  warning while the cage remained closed and retained the original NBT. No occupant
+  data was discarded.
+- Client render regression — **PASS**. The automated client suite completed and
+  captured both nine-animal lineups, gorilla fur/rare/silverback variants, lion pride,
+  chest-beat animation, and the Field Guide. The fresh screenshots were visually
+  inspected; no invisible model, missing texture, broken overlay, or guide-layout
+  regression was found.
+- Package — **PASS**: the remapped 0.4.2 JAR passes ZIP integrity inspection and its
+  embedded metadata reports the correct version, environment, and dependencies.
+
+The full behavior batteries from 0.1.0 through 0.4.1 remain below. This audit focused
+on independent regression checks plus the reliability defects found in the current
+tree; it does not claim that software can be proven free of every possible edge case.
+
+---
+
 # Menagerie 0.1.0 — Verification Battery
 
 Date: 2026-08-15. Environment: dev dedicated server (Fabric loader 0.19.3, MC 26.2,

@@ -36,7 +36,9 @@ public final class SpeciesRegistry {
 	private static final Gson GSON = new Gson();
 
 	/** entityId -> its species, in stable (alphabetical file) order. */
-	private static Map<String, List<Species>> byEntity = Map.of();
+	private static volatile Map<String, List<Species>> byEntity = Map.of();
+	/** Increments after each successful apply so existing mobs can adopt retuned attributes. */
+	private static volatile long revision;
 	/** "entityId|species" -> weight recorded when biome spawn entries were baked. */
 	private static final Map<String, Integer> bakedWeights = new ConcurrentHashMap<>();
 
@@ -46,6 +48,10 @@ public final class SpeciesRegistry {
 
 	public static Map<String, List<Species>> all() {
 		return byEntity;
+	}
+
+	public static long revision() {
+		return revision;
 	}
 
 	public static List<Species> speciesFor(String entityId) {
@@ -139,6 +145,7 @@ public final class SpeciesRegistry {
 			Map<String, List<Species>> frozen = new HashMap<>();
 			data.forEach((key, value) -> frozen.put(key, List.copyOf(value)));
 			byEntity = Map.copyOf(frozen);
+			revision++;
 			int total = byEntity.values().stream().mapToInt(List::size).sum();
 			Menagerie.LOGGER.info("Loaded {} species across {} animals", total, byEntity.size());
 		}

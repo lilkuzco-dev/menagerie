@@ -1,9 +1,14 @@
 {
-	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance). Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required. Phase 3.1: fur is a per-individual pick from the 'textures' list (stable per entity); the silverback saddle is a translucent overlay layer, so it composes with every fur colour instead of needing a silverback copy of each. RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (3-5, cap 8). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever. VARIANT ROLLS: albino at 5% per gorilla, rolled ONCE at spawn and persisted in NBT so an individual never re-rolls; babies roll independently, so an albino born into a normal troop is the jackpot sighting. Otherwise identical \u2014 same stats, troop role and taming. Generic: any species can gain a rare coat by adding a variant_rolls entry, no Java.",
+	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance). Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required. Phase 3.1: fur is a per-individual pick from the 'textures' list (stable per entity); the silverback saddle is a translucent overlay layer, so it composes with every fur colour instead of needing a silverback copy of each. RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (3-5, cap 8). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks — the fix for persistent CREATURE mobs accumulating forever. VARIANT ROLLS: albino at 5% per gorilla, rolled ONCE at spawn and persisted in NBT so an individual never re-rolls; babies roll independently, so an albino born into a normal troop is the jackpot sighting. Otherwise identical — same stats, troop role and taming. Generic: any species can gain a rare coat by adding a variant_rolls entry, no Java. ECOLOGY 0.4.2: bamboo jungle is carved out and handed to gorilla_mountain, so the two species split the jungle family cleanly instead of overlapping. BABY SIZE 0.4.2: baby_scale moved 0.5 -> 1.0. The client already bakes the baby mesh through vanilla's BabyModelTransform (body halved, head full size) and vanilla age scaling halves the hitbox, so a 0.5 here was a SECOND shrink and calves rendered at a quarter of adult size. 1.0 = vanilla baby proportions. TERRALITH PASS: also cedes Terralith's montane jungles to gorilla_mountain.",
 	"entity": "menagerie:gorilla",
 	"species": "lowland",
 	"biomes": [
 		"#minecraft:is_jungle"
+	],
+	"exclude_biomes": [
+		"minecraft:bamboo_jungle",
+		"terralith:jungle_mountains",
+		"terralith:rocky_jungle"
 	],
 	"group_size": [
 		3,
@@ -47,7 +52,7 @@
 			"minecraft:melon_slice"
 		],
 		"cooldown_ticks": 6000,
-		"baby_scale": 0.5
+		"baby_scale": 1.0
 	},
 	"variant_rolls": {
 		"albino": {

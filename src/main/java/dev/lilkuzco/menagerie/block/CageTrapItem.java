@@ -23,6 +23,7 @@ public class CageTrapItem extends BlockItem {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation") // Minecraft 26.2 exposes no replacement custom-item tooltip hook
 	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
 			Consumer<Component> builder, TooltipFlag flag) {
 		CompoundTag captured = capturedTag(stack);
@@ -52,6 +53,6 @@ public class CageTrapItem extends BlockItem {
 		if (data == null) {
 			return null;
 		}
-		return data.getUnsafe().getCompound("menagerie_captured").orElse(null);
+		return data.copyTagWithoutId().getCompound("menagerie_captured").orElse(null);
 	}
 }
