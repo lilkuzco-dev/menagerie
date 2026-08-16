@@ -409,6 +409,50 @@ function guideIcon(srcPng, rx, ry, rw, rh, silhouette) {
 	return cv;
 }
 
+
+// ---------- albino gorilla ----------
+// Derived from the SOURCED gorilla skin, not painted fresh: every UV pixel stays where
+// it is, so it is provably the same gorilla in white. Fur is flattened to luminance and
+// remapped onto a cream ramp; the bare-skin UV rects (face, ears, hands, muzzle — taken
+// straight from GorillaModel's texOffs values) get a pink cast the way real albinism
+// leaves unpigmented skin showing through.
+function paintAlbinoGorilla(src) {
+	const cv = makeCanvas(src.w);
+	// bare-skin rectangles in UV space, from the model's box layout
+	const SKIN = [
+		[8, 43, 8, 9],    // head front (face)
+		[68, 2, 5, 2],    // mouth front
+		[66, 32, 3, 1],   // nose front
+		[45, 17, 5, 1],   // lower jaw front
+		[66, 5, 8, 6],    // right ear block
+		[19, 69, 8, 6],   // left ear block
+		[62, 34, 18, 9],  // right hand block
+		[64, 15, 18, 9],  // left hand block
+	];
+	const inSkin = (x, y) => SKIN.some(([rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && y < ry + rh);
+	for (let y = 0; y < src.h; y++) {
+		for (let x = 0; x < src.w; x++) {
+			const i = (y * src.w + x) * 4;
+			if (src.px[i + 3] < 8) continue;
+			const l = lum([src.px[i], src.px[i + 1], src.px[i + 2]]);
+			// compress the dark fur range into a bright cream ramp, keeping the shading
+			const t = Math.min(1, l / 90);
+			let c = [
+				Math.round(214 + 34 * t),
+				Math.round(208 + 34 * t),
+				Math.round(196 + 34 * t),
+			];
+			if (inSkin(x, y)) {
+				// unpigmented skin: warmer and a touch deeper than the coat
+				c = [Math.min(255, Math.round(c[0] * 1.02)), Math.round(c[1] * 0.84), Math.round(c[2] * 0.83)];
+			}
+			const j = (y * cv.w + x) * 4;
+			cv.px[j] = c[0]; cv.px[j + 1] = c[1]; cv.px[j + 2] = c[2]; cv.px[j + 3] = src.px[i + 3];
+		}
+	}
+	return cv;
+}
+
 // ---------- mod icon: blocky gorilla face, palette from the same wolf/panda grays ----------
 function paintIcon(P) {
 	const cv = makeCanvas(128);
@@ -506,6 +550,15 @@ for (const [rel, painter] of jobs) {
 	console.log("wrote", rel);
 }
 
+// albino coat, generated from the imported source skin (see paintAlbinoGorilla)
+{
+	const gorillaDir = path.join(OUT_ROOT, "textures/entity/gorilla");
+	const base = decodePng(fs.readFileSync(path.join(gorillaDir, "default.png")));
+	const albino = paintAlbinoGorilla(base);
+	fs.writeFileSync(path.join(gorillaDir, "albino.png"), encodePng(albino.w, albino.h, albino.px));
+	console.log("wrote textures/entity/gorilla/albino.png");
+}
+
 const icon = paintIcon(gorillaP);
 fs.writeFileSync(path.join(OUT_ROOT, "icon.png"), encodePng(icon.w, icon.h, icon.px));
 console.log("wrote icon.png");
@@ -559,6 +612,7 @@ const ICON_REGIONS = {
 	grizzly: [6, 33, 8, 7],      // head front
 	vulture: [45, 0, 4, 5],      // bald head from above
 	snake: [12, 0, 14, 6],       // body segment strip
+	lion: [7, 33, 8, 7],         // head front (128x128 imported skin)
 };
 const speciesDir = path.join(__dirname, "..", "src/main/resources/data/menagerie/species");
 for (const file of fs.readdirSync(speciesDir)) {

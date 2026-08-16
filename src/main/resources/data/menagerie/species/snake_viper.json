@@ -1,12 +1,11 @@
 {
-	"_tuning_notes": "Desert viper: coiled and near-motionless until a player is within 4 blocks (rattle warning), strikes only inside 2 after warning \u2014 careful players never get bitten. venom block = effect applied on strike (amplifier 1 = Poison II, seconds 8). Slithers from sprinters. worldgen_only + no drops: ambience like the tortoise. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
+	"_tuning_notes": "Desert viper: coiled and near-motionless until a player is within 4 blocks (rattle warning), strikes only inside 2 after warning \u2014 careful players never get bitten. venom block = effect applied on strike (amplifier 1 = Poison II, seconds 8). Slithers from sprinters. worldgen_only + no drops: ambience like the tortoise. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal \u2014 its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:snake",
 	"species": "viper",
 	"biomes": [
 		"minecraft:desert",
 		"#minecraft:is_badlands"
 	],
-	"weight": 6,
 	"group_size": [
 		1,
 		2
@@ -31,5 +30,7 @@
 			"minecraft:chicken"
 		],
 		"scavenges": false
-	}
+	},
+	"rarity": "uncommon",
+	"nearby_cap": 3
 }

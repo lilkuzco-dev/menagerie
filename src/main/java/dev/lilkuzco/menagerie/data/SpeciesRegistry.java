@@ -68,7 +68,7 @@ public final class SpeciesRegistry {
 		for (Species species : speciesFor(entityId)) {
 			if (species.matchesBiome(biome)) {
 				matches.add(species);
-				totalWeight += Math.max(1, species.weight());
+				totalWeight += Math.max(1, species.effectiveWeight());
 			}
 		}
 		if (matches.isEmpty()) {
@@ -76,7 +76,7 @@ public final class SpeciesRegistry {
 		}
 		int roll = random.nextInt(totalWeight);
 		for (Species species : matches) {
-			roll -= Math.max(1, species.weight());
+			roll -= Math.max(1, species.effectiveWeight());
 			if (roll < 0) {
 				return species;
 			}
@@ -91,7 +91,7 @@ public final class SpeciesRegistry {
 	}
 
 	public static void recordBakedWeight(Species species) {
-		bakedWeights.put(species.entityId() + "|" + species.name(), species.weight());
+		bakedWeights.put(species.entityId() + "|" + species.name(), species.effectiveWeight());
 	}
 
 	/** live/baked spawn-weight ratio, clamped to [0,1]; 1 when never baked (dev fallback). */
@@ -100,13 +100,18 @@ public final class SpeciesRegistry {
 		if (baked == null || baked <= 0) {
 			return 1.0;
 		}
-		return Math.min(1.0, (double) species.weight() / baked);
+		return Math.min(1.0, (double) species.effectiveWeight() / baked);
 	}
 
 	private static class Listener extends SimpleReloadListener<Map<String, List<Species>>> {
 		@Override
 		protected Map<String, List<Species>> prepare(PreparableReloadListener.SharedState state) {
 			ResourceManager manager = state.resourceManager();
+			// rarity presets first: species resolve their tier lazily, but keeping the
+			// load in the same listener means one /reload retunes density and stats together
+			RarityConfig.set(manager.getResource(Menagerie.id("menagerie_config/rarity.json"))
+					.map(res -> RarityConfig.fromJson(parse(res)))
+					.orElseGet(RarityConfig::defaults));
 			Map<String, List<Species>> map = new HashMap<>();
 			manager.listResources("species", p -> p.getPath().endsWith(".json")).entrySet().stream()
 					.sorted(Map.Entry.comparingByKey())

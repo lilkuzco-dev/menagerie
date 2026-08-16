@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "Jungle leopard. Stalker: crouch-approach, pounce with leap. Prey = chickens, rabbits, baby animals; players only when below half health (opportunist, hardcoded); flees when 2+ players within 8 blocks. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
+	"_tuning_notes": "Jungle leopard. Stalker: crouch-approach, pounce with leap. Prey = chickens, rabbits, baby animals; players only when below half health (opportunist, hardcoded); flees when 2+ players within 8 blocks. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'rare' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 2). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:leopard",
 	"species": "leopard",
 	"biomes": [
 		"#minecraft:is_jungle"
 	],
-	"weight": 5,
 	"group_size": [
 		1,
 		2
@@ -25,5 +24,16 @@
 			"minecraft:rabbit"
 		],
 		"scavenges": false
+	},
+	"rarity": "rare",
+	"nearby_cap": 2,
+	"breeding": {
+		"items": [
+			"minecraft:rabbit",
+			"minecraft:chicken",
+			"minecraft:beef"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
 	}
 }

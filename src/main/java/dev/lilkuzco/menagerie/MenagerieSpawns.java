@@ -23,7 +23,7 @@ public final class MenagerieSpawns {
 				.add(ModificationPhase.ADDITIONS, ctx -> true, (selection, modification) -> {
 					for (var speciesList : SpeciesRegistry.all().values()) {
 						for (Species species : speciesList) {
-							if (species.weight() <= 0 || !species.matchesBiome(selection.getBiomeHolder())) {
+							if (species.effectiveWeight() <= 0 || !species.matchesBiome(selection.getBiomeHolder())) {
 								continue;
 							}
 							Identifier entityKey = Identifier.parse(species.entityId());
@@ -35,8 +35,8 @@ public final class MenagerieSpawns {
 								continue;
 							}
 							modification.getMobSpawnSettings().addSpawn(MobCategory.CREATURE,
-									new MobSpawnSettings.SpawnerData(type, species.groupMin(), species.groupMax()),
-									species.weight());
+									new MobSpawnSettings.SpawnerData(type, species.effectiveGroupMin(), species.effectiveGroupMax()),
+									species.effectiveWeight());
 							SpeciesRegistry.recordBakedWeight(species);
 						}
 					}

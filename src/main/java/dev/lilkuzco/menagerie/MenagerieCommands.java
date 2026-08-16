@@ -5,16 +5,21 @@ import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.data.SpeciesRegistry;
 import dev.lilkuzco.menagerie.entity.GorillaEntity;
 import dev.lilkuzco.menagerie.entity.SpeciesMob;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Headless-verification helpers (same spirit as /vibranium_census):
@@ -37,6 +42,16 @@ public final class MenagerieCommands {
 								.then(Commands.argument("radius", IntegerArgumentType.integer(1, 512))
 										.executes(ctx -> troops(ctx.getSource(),
 												IntegerArgumentType.getInteger(ctx, "radius")))))
+						.then(Commands.literal("cull")
+								.then(Commands.argument("entity", IdentifierArgument.id())
+										.then(Commands.argument("radius", IntegerArgumentType.integer(1, 512))
+												.then(Commands.argument("keep", IntegerArgumentType.integer(0, 512))
+														.executes(ctx -> cull(ctx.getSource(),
+																IdentifierArgument.getId(ctx, "entity"),
+																IntegerArgumentType.getInteger(ctx, "radius"),
+																IntegerArgumentType.getInteger(ctx, "keep")))))))
+						.then(Commands.literal("rarity")
+								.executes(ctx -> rarity(ctx.getSource())))
 						.then(Commands.literal("silverback")
 								.executes(ctx -> promoteNearest(ctx.getSource())))));
 	}
@@ -102,6 +117,64 @@ public final class MenagerieCommands {
 				"troop " + id.toString().substring(0, 8) + ": members=" + row[0]
 						+ " silverbacks=" + row[1] + " babies=" + row[2]), false));
 		return troops.size();
+	}
+
+	/**
+	 * Thin out an already-overrun area (the pre-cap gorilla jungles). Removes excess
+	 * animals of one type beyond {@code keep}, farthest first, and NEVER touches a tamed
+	 * or named animal — someone's ranch is not overcrowding.
+	 */
+	private static int cull(CommandSourceStack source, Identifier entityId, int radius, int keep) {
+		ServerLevel level = source.getLevel();
+		Vec3 origin = source.getPosition();
+		AABB box = AABB.unitCubeFromLowerCorner(origin).inflate(radius, radius, radius);
+		List<SpeciesMob> candidates = new ArrayList<>();
+		int protectedCount = 0;
+		for (SpeciesMob mob : level.getEntitiesOfClass(SpeciesMob.class, box)) {
+			if (!mob.entityId().equals(entityId.toString())) {
+				continue;
+			}
+			if (mob.isTame() || mob.hasCustomName()) {
+				protectedCount++;
+				continue;
+			}
+			candidates.add(mob);
+		}
+		// farthest first: culling thins the edges and leaves what is around you intact
+		candidates.sort(java.util.Comparator.comparingDouble(
+				(SpeciesMob mob) -> mob.position().distanceToSqr(origin)).reversed());
+		int removed = 0;
+		for (SpeciesMob mob : candidates) {
+			if (candidates.size() - removed <= keep) {
+				break;
+			}
+			mob.discard();
+			removed++;
+		}
+		final int culled = removed;
+		final int kept = candidates.size() - removed;
+		final int spared = protectedCount;
+		source.sendSuccess(() -> Component.literal("culled " + culled + " " + entityId.getPath()
+				+ " (kept " + kept + " wild, spared " + spared + " tamed/named)"), true);
+		return culled;
+	}
+
+	/** Resolved spawn numbers per species — makes a /reload retune observable. */
+	private static int rarity(CommandSourceStack source) {
+		Map<String, List<Species>> all = new TreeMap<>(SpeciesRegistry.all());
+		int count = 0;
+		for (Map.Entry<String, List<Species>> entry : all.entrySet()) {
+			for (Species species : entry.getValue()) {
+				count++;
+				source.sendSuccess(() -> Component.literal(String.format(
+						"%s|%s tier=%s weight=%d group=%d-%d cap=%d attempt=%.2f",
+						Identifier.parse(species.entityId()).getPath(), species.name(),
+						species.rarity().isEmpty() ? "(default)" : species.rarity(),
+						species.effectiveWeight(), species.effectiveGroupMin(), species.effectiveGroupMax(),
+						species.nearbyCap(), species.attemptChance())), false);
+			}
+		}
+		return count;
 	}
 
 	private static int promoteNearest(CommandSourceStack source) {

@@ -4,7 +4,7 @@ import dev.lilkuzco.menagerie.MenagerieSounds;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.entity.ai.BabyRideAdultGoal;
 import dev.lilkuzco.menagerie.entity.ai.FoliageTearGoal;
-import dev.lilkuzco.menagerie.entity.ai.FollowSilverbackGoal;
+import dev.lilkuzco.menagerie.entity.ai.FollowLeaderGoal;
 import dev.lilkuzco.menagerie.entity.ai.TroopRetaliateGoal;
 import java.util.List;
 import java.util.UUID;
@@ -98,6 +98,12 @@ public class GorillaEntity extends SpeciesMob {
 		builder.define(SILVERBACK, false);
 	}
 
+	/** already registers its own BreedGoal below. */
+	@Override
+	protected boolean hasBreedGoal() {
+		return true;
+	}
+
 	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
@@ -108,7 +114,8 @@ public class GorillaEntity extends SpeciesMob {
 		this.goalSelector.addGoal(5, new TemptGoal(this, 1.1, stack -> isFood(stack) || isTameItem(stack), false));
 		this.goalSelector.addGoal(6, new BabyRideAdultGoal(this));
 		this.goalSelector.addGoal(7, new FoliageTearGoal(this));
-		this.goalSelector.addGoal(8, new FollowSilverbackGoal(this, 1.0));
+		this.goalSelector.addGoal(8, new FollowLeaderGoal<>(this, GorillaEntity.class, 1.0,
+				GorillaEntity::isSilverback, GorillaEntity::sameTroop));
 		this.goalSelector.addGoal(9, new WaterAvoidingRandomStrollGoal(this, 0.9) {
 			@Override
 			public boolean canUse() {
@@ -172,6 +179,10 @@ public class GorillaEntity extends SpeciesMob {
 	public Identifier texture() {
 		Species species = species();
 		if (species == null || species.textures().isEmpty()) {
+			return super.texture();
+		}
+		// a rare coat outranks the fur table — super.texture() resolves variant_rolls
+		if (hasRareVariant() && species.variant(getVariantName()) != null) {
 			return super.texture();
 		}
 		List<Identifier> options = species.textures();

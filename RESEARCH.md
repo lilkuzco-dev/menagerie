@@ -191,3 +191,60 @@ animal remains vanilla-remix art per the standing doctrine.
   `ModNearestAttackableTargetGoal`, `ModOwnerHurt*` → **SKIPPED**: they re-implement
   vanilla goals around the mod's own gender/behaviour-type state machine, which our
   troop/taming/disposition logic already covers more richly.
+
+---
+
+## Renaissance Update — sourced overhaul groundwork (v0.4.0, 2026-08-16)
+
+### Licenses — seven jars, each verified individually
+
+All seven jars in `~/Desktop/Animal mods open source/` declare `license="Unlicense"` in
+loader metadata **and** carry the full public-domain dedication text in the jar root.
+Both were checked by reading the files, not trusting the filenames. Full asset and code
+reuse is cleared. sha256s and the per-jar inventory are in `assets/SOURCES.md`.
+
+**One discrepancy recorded rather than resolved:** `untamedanimalz` is Untamed Wilds
+(`untamedwilds`, RayTrace082), whose **public GitHub repo is GPL-3.0** — verified by this
+project during Phase 1 and still recorded above. This jar is self-consistently Unlicense.
+That is what a deliberate public-domain re-release looks like, and the user has cleared
+it, but the two artifacts genuinely disagree and an auditor deserves to see both facts.
+
+### Lion port (Animal Garden — Lion 1.0.3)
+
+The easiest port yet and worth noting why: the jar is a **native Fabric 26.2 build whose
+classes carry Mojang names**, so the 34-part model geometry is verbatim and the 35
+keyframe animations needed only their import line swapped (the mod bundles its own copy
+of the vanilla animation API under `aquariusplayz.libs.animations`, with an identical
+surface). No SRG remapping, unlike the gorilla.
+
+**aquarius_libs was not vendored.** Its touchpoints turned out to be things Menagerie
+already has: `ModAnimationState` is vanilla `AnimationState`, `DefaultAnimatedModel` is
+our `EntityModel<MenagerieRenderState>`, `ModMobRenderState` is `MenagerieRenderState`,
+`ModResourceLocation` is `Identifier`, and `RegisterFunctions.createLayer` is a
+`ModelLayerLocation` constructor. Reimplementing against our own base classes was smaller
+than vendoring and keeps the mod dependency-clean.
+
+The source ships only 4 eye textures per side while its renderer array declares 6 — the
+extra entries point at files that do not exist. Ours clamps to the 4 real ones.
+
+### GeckoLib ruling (for elephant + Critters & Companions)
+
+GeckoLib is **MIT** and publishes a Fabric build for 26.2 (5.5.3 on Modrinth). Under the
+updated ruling that clears it as Menagerie's one animation dependency when those waves
+land. Nothing depends on it yet, so this release remains Fabric-API-only.
+
+### Rarity overhaul — why a framework and not a number
+
+Vanilla's jungle pool is parrot 40 / chicken 10 / ocelot 2 / **panda 1**. Gorillas shipped
+at weight 8 with 3-6 group spawns, and because CREATURE-category mobs never despawn, the
+population compounds — roughly thirty times panda density in a lived-in world. Two fixes,
+both data-driven:
+
+- **Tiers** (`ubiquitous`/`common`/`uncommon`/`rare`/`epic`) in
+  `menagerie_config/rarity.json` set weight, group size and cap together; a species says
+  one word. Explicit `weight`/`group_size`/`nearby_cap` still win. Hot-reloadable.
+- **Nearby cap** — the accumulation killer. The spawn predicate counts same-type animals
+  within 64 blocks and denies the spawn at the ceiling. Weight alone cannot fix a
+  never-despawning mob; only a ceiling can.
+
+Gorilla is now `rare` (weight 2, panda-class), troop 3-5, cap 8.

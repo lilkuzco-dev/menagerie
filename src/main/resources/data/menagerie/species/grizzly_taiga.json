@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "Taiga grizzly, the diet-system showcase. diet.hunts = entity ids fished/hunted when hungry (paw-swipe at salmon in water within 12, 40% per swipe, hardcoded); diet.scavenges reserved for shared use with the vulture. special.berry_raiding also needs mobGriefing. Mother-aggro: hurting a cub or standing within 6 blocks of one angers every adult within 16. Sleeps at night in shelter \u2014 day is the threat window. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier.",
+	"_tuning_notes": "Taiga grizzly, the diet-system showcase. diet.hunts = entity ids fished/hunted when hungry (paw-swipe at salmon in water within 12, 40% per swipe, hardcoded); diet.scavenges reserved for shared use with the vulture. special.berry_raiding also needs mobGriefing. Mother-aggro: hurting a cub or standing within 6 blocks of one angers every adult within 16. Sleeps at night in shelter \u2014 day is the threat window. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:grizzly",
 	"species": "grizzly",
 	"biomes": [
 		"#minecraft:is_taiga"
 	],
-	"weight": 6,
 	"group_size": [
 		1,
 		3
@@ -27,5 +26,15 @@
 		"berry_raiding": true
 	},
 	"cage_tier": 2,
-	"guide_blurb": "Fish thief, berry burglar, terrible alarm clock."
+	"guide_blurb": "Fish thief, berry burglar, terrible alarm clock.",
+	"rarity": "uncommon",
+	"nearby_cap": 3,
+	"breeding": {
+		"items": [
+			"minecraft:salmon",
+			"minecraft:honey_bottle"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	}
 }

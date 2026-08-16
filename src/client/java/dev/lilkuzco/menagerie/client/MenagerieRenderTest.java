@@ -93,6 +93,25 @@ public class MenagerieRenderTest implements FabricClientGameTest {
 			context.waitTicks(30);
 			context.takeScreenshot("gorilla_saddle_ab_back");
 
+			// Lion: fur variants plus the maned pride leader (mane part renders only for him)
+			server.runCommand("kill @e[type=!minecraft:player]");
+			for (int i = 0; i < 4; i++) {
+				server.runCommand("execute at @p run summon menagerie:lion ~" + (i * 2.6 - 3.9)
+						+ " ~ ~7 {NoAI:1b,Rotation:[180f,0f],menagerie_species:\"savanna\","
+						+ "menagerie_maned:" + (i == 1 ? "1b" : "0b") + "}");
+			}
+			context.waitTicks(40);
+			context.takeScreenshot("lion_pride");
+
+			// Albino gorilla: the variant roll forced for the shot, beside a normal adult
+			server.runCommand("kill @e[type=!minecraft:player]");
+			server.runCommand("execute at @p run summon menagerie:gorilla ~-1.8 ~ ~5 "
+					+ "{NoAI:1b,Rotation:[180f,0f],menagerie_species:\"lowland\"}");
+			server.runCommand("execute at @p run summon menagerie:gorilla ~1.8 ~ ~5 "
+					+ "{NoAI:1b,Rotation:[180f,0f],menagerie_species:\"lowland\",menagerie_variant:\"albino\"}");
+			context.waitTicks(40);
+			context.takeScreenshot("gorilla_albino");
+
 			// Chest-beat needs a LIVE silverback: NoAI skips customServerAiStep entirely,
 			// so these are plain summons (each becomes silverback of its own troop) with a
 			// hostile parked inside the detect radius to trigger the pump.

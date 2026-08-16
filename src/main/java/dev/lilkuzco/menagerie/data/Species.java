@@ -40,7 +40,82 @@ public record Species(
 		@org.jspecify.annotations.Nullable Venom venom,
 		int cageTier,
 		String guideBlurb,
-		@org.jspecify.annotations.Nullable Forage forage) {
+		@org.jspecify.annotations.Nullable Forage forage,
+		String rarity,
+		int nearbyCapOverride,
+		List<VariantRoll> variantRolls,
+		@org.jspecify.annotations.Nullable Breeding breeding) {
+
+	/**
+	 * Optional "variant_rolls": rare skins rolled ONCE at spawn and persisted, so a
+	 * given animal never re-rolls. Pure JSON — any animal can gain a rare coat with no
+	 * Java at all.
+	 */
+	public record VariantRoll(String name, float chance, Identifier texture) {
+		static VariantRoll fromJson(String name, JsonObject json) {
+			return new VariantRoll(name,
+					GsonHelper.getAsFloat(json, "chance", 0.05F),
+					Identifier.parse(GsonHelper.getAsString(json, "texture")));
+		}
+	}
+
+	/** Optional "breeding" block: feed two adults -> baby, vanilla-style. */
+	public record Breeding(List<String> items, int cooldownTicks, double babyScale) {
+		static Breeding fromJson(JsonObject json) {
+			List<String> items = GsonHelper.getAsJsonArray(json, "items", new com.google.gson.JsonArray())
+					.asList().stream().map(e -> e.getAsString()).toList();
+			return new Breeding(items,
+					GsonHelper.getAsInt(json, "cooldown_ticks", 6000),
+					GsonHelper.getAsDouble(json, "baby_scale", 0.5));
+		}
+	}
+
+	// ---------- rarity resolution ----------
+	// Explicit weight/group_size in the JSON always win; otherwise the rarity tier
+	// supplies them, so one word ("rare") sets density, group size and the nearby cap.
+	public RarityConfig.Tier tier() {
+		return RarityConfig.get().tier(rarity);
+	}
+
+	public int effectiveWeight() {
+		return weight >= 0 ? weight : tier().weight();
+	}
+
+	public int effectiveGroupMin() {
+		return groupMin >= 0 ? groupMin : tier().groupMin();
+	}
+
+	public int effectiveGroupMax() {
+		return groupMax >= 0 ? groupMax : tier().groupMax();
+	}
+
+	/** Max same-type animals within {@link RarityConfig#NEARBY_RADIUS} before spawns are denied. */
+	public int nearbyCap() {
+		return nearbyCapOverride > 0 ? nearbyCapOverride : tier().nearbyCap();
+	}
+
+	/** Fraction of otherwise-eligible spawn attempts that survive (epic tiers thin further). */
+	public float attemptChance() {
+		return tier().attemptChance();
+	}
+
+	public @org.jspecify.annotations.Nullable VariantRoll rollVariant(RandomSource random) {
+		for (VariantRoll roll : variantRolls) {
+			if (random.nextFloat() < roll.chance()) {
+				return roll;
+			}
+		}
+		return null;
+	}
+
+	public @org.jspecify.annotations.Nullable VariantRoll variant(String name) {
+		for (VariantRoll roll : variantRolls) {
+			if (roll.name().equals(name)) {
+				return roll;
+			}
+		}
+		return null;
+	}
 
 	/** Optional "forage" block: blocks the animal seeks out and eats (mobGriefing-gated). */
 	public record Forage(List<String> blocks, int range, int cooldownTicks, int contentMinutes) {
@@ -96,7 +171,7 @@ public record Species(
 		String species = GsonHelper.getAsString(json, "species", fileName);
 		List<String> biomes = GsonHelper.getAsJsonArray(json, "biomes").asList().stream()
 				.map(e -> e.getAsString()).toList();
-		var group = GsonHelper.getAsJsonArray(json, "group_size");
+		var group = GsonHelper.getAsJsonArray(json, "group_size", null);
 		String tame = GsonHelper.getAsString(json, "tame_item", "");
 		// "size_scale" (Phase 2 name) and "scale" (Phase 1 name) are the same knob
 		double scale = json.has("size_scale")
@@ -106,9 +181,9 @@ public record Species(
 				entity,
 				species,
 				biomes,
-				GsonHelper.getAsInt(json, "weight"),
-				group.get(0).getAsInt(),
-				group.get(1).getAsInt(),
+				GsonHelper.getAsInt(json, "weight", -1),
+				group == null ? -1 : group.get(0).getAsInt(),
+				group == null ? -1 : group.get(1).getAsInt(),
 				GsonHelper.getAsBoolean(json, "worldgen_only", false),
 				GsonHelper.getAsDouble(json, "health"),
 				GsonHelper.getAsDouble(json, "attack", 0.0),
@@ -130,7 +205,23 @@ public record Species(
 				json.has("venom") ? Venom.fromJson(GsonHelper.getAsJsonObject(json, "venom")) : null,
 				GsonHelper.getAsInt(json, "cage_tier", 1),
 				GsonHelper.getAsString(json, "guide_blurb", ""),
-				json.has("forage") ? Forage.fromJson(GsonHelper.getAsJsonObject(json, "forage")) : null);
+				json.has("forage") ? Forage.fromJson(GsonHelper.getAsJsonObject(json, "forage")) : null,
+				GsonHelper.getAsString(json, "rarity", ""),
+				GsonHelper.getAsInt(json, "nearby_cap", 0),
+				parseVariantRolls(json),
+				json.has("breeding") ? Breeding.fromJson(GsonHelper.getAsJsonObject(json, "breeding")) : null);
+	}
+
+	private static List<VariantRoll> parseVariantRolls(JsonObject json) {
+		if (!json.has("variant_rolls")) {
+			return List.of();
+		}
+		JsonObject rolls = GsonHelper.getAsJsonObject(json, "variant_rolls");
+		List<VariantRoll> out = new java.util.ArrayList<>();
+		for (String key : rolls.keySet()) {
+			out.add(VariantRoll.fromJson(key, GsonHelper.getAsJsonObject(rolls, key)));
+		}
+		return List.copyOf(out);
 	}
 
 	public boolean matchesBiome(Holder<Biome> biome) {
@@ -147,7 +238,9 @@ public record Species(
 	}
 
 	public int groupSize(RandomSource random) {
-		return groupMin + random.nextInt(Math.max(1, groupMax - groupMin + 1));
+		int min = effectiveGroupMin();
+		int max = effectiveGroupMax();
+		return min + random.nextInt(Math.max(1, max - min + 1));
 	}
 
 	// ---------- special-block accessors (per-animal knobs, all with defaults) ----------

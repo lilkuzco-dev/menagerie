@@ -397,5 +397,83 @@
 			}
 		],
 		"subtitle": "subtitles.menagerie.snake_death"
+	},
+	"entity.lion.ambient": {
+		"sounds": [
+			{
+				"name": "menagerie:lion/idle1"
+			},
+			{
+				"name": "menagerie:lion/idle2"
+			},
+			{
+				"name": "menagerie:lion/idle3"
+			},
+			{
+				"name": "menagerie:lion/idle4"
+			},
+			{
+				"name": "menagerie:lion/idle5"
+			},
+			{
+				"name": "menagerie:lion/idle6"
+			}
+		],
+		"subtitle": "subtitles.menagerie.lion_ambient"
+	},
+	"entity.lion.roar": {
+		"sounds": [
+			{
+				"name": "menagerie:lion/roar1",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar2",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar3",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar4",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar5",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar6",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar7",
+				"volume": 1.3
+			},
+			{
+				"name": "menagerie:lion/roar8",
+				"volume": 1.3
+			}
+		],
+		"subtitle": "subtitles.menagerie.lion_roar"
+	},
+	"entity.lion.hurt": {
+		"sounds": [
+			{
+				"name": "menagerie:lion/roar3",
+				"pitch": 1.25
+			}
+		],
+		"subtitle": "subtitles.menagerie.lion_hurt"
+	},
+	"entity.lion.death": {
+		"sounds": [
+			{
+				"name": "menagerie:lion/roar7",
+				"pitch": 0.8
+			}
+		],
+		"subtitle": "subtitles.menagerie.lion_death"
 	}
 }

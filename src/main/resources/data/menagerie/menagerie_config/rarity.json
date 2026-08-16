@@ -1,0 +1,10 @@
+{
+	"_tuning_notes": "Spawn rarity presets, calibrated against vanilla's own jungle pool (parrot 40 / chicken 10 / ocelot 2 / panda 1). A species picks ONE tier name and inherits weight + group size + nearby_cap; explicit weight/group_size/nearby_cap in a species file still win. nearby_cap is the accumulation killer: CREATURE-category animals never despawn, so without a cap a modest weight piles up forever (this is how gorillas reached ~30x panda density). attempt_chance thins epic tiers further — only that fraction of otherwise-valid spawn attempts survive. Hot-reloadable: edit + /reload and density changes with no rebuild.",
+	"tiers": {
+		"ubiquitous": {"weight": 12, "group_min": 2, "group_max": 4, "nearby_cap": 12, "attempt_chance": 1.0},
+		"common":     {"weight": 8,  "group_min": 1, "group_max": 3, "nearby_cap": 10, "attempt_chance": 1.0},
+		"uncommon":   {"weight": 4,  "group_min": 1, "group_max": 3, "nearby_cap": 6,  "attempt_chance": 1.0},
+		"rare":       {"weight": 2,  "group_min": 1, "group_max": 2, "nearby_cap": 4,  "attempt_chance": 1.0},
+		"epic":       {"weight": 1,  "group_min": 1, "group_max": 2, "nearby_cap": 3,  "attempt_chance": 0.35}
+	}
+}

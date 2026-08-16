@@ -1,0 +1,54 @@
+{
+	"entity": "menagerie:lion",
+	"rarity": "rare",
+	"group_size": [
+		3,
+		4
+	],
+	"nearby_cap": 6,
+	"worldgen_only": false,
+	"health": 40,
+	"attack": 8,
+	"speed": 0.31,
+	"knockback": 1.0,
+	"neutral": true,
+	"cage_tier": 2,
+	"breeding": {
+		"items": [
+			"minecraft:beef",
+			"minecraft:mutton",
+			"minecraft:rabbit"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	},
+	"diet": {
+		"hunts": [
+			"minecraft:cow",
+			"minecraft:sheep",
+			"minecraft:rabbit",
+			"minecraft:chicken"
+		],
+		"scavenges": false
+	},
+	"special": {
+		"pride_courage": 3
+	},
+	"species": "savanna",
+	"biomes": [
+		"#minecraft:is_savanna"
+	],
+	"texture": "menagerie:textures/entity/lion/body_0.png",
+	"textures": [
+		"menagerie:textures/entity/lion/body_0.png",
+		"menagerie:textures/entity/lion/body_1.png",
+		"menagerie:textures/entity/lion/body_2.png",
+		"menagerie:textures/entity/lion/body_3.png",
+		"menagerie:textures/entity/lion/body_4.png",
+		"menagerie:textures/entity/lion/body_5.png",
+		"menagerie:textures/entity/lion/body_6.png",
+		"menagerie:textures/entity/lion/body_7.png"
+	],
+	"guide_blurb": "The pride does the hunting. The mane does the arguing.",
+	"_tuning_notes": "Savanna lion, from the Animal Garden - Lion source set (public domain). One maned male per pride is assigned at group spawn, exactly like the gorilla's silverback, and the mane part is only rendered for him \u2014 the pride leader is readable at a glance. special.pride_courage is how many pride members it takes before a lion will start on a HEALTHY player; below that it behaves like the leopard and only takes weakened or small prey, which keeps a lone lion from being a savanna death sentence. Fur is a per-individual pick from the textures list. RARITY: tier 'rare' (panda-class weight) with pride 3-4 and nearby_cap 6."
+}

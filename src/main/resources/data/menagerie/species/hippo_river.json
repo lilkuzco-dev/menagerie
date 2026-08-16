@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "River hippo, the territory tank. territory.radius = aggro zone in blocks around the water-anchored claim (anchor 'water' snaps the center to the nearest water within 8 at spawn; 'spawn' uses the spawn spot); aggro_inside=false would make it decorative. Intruders (survival players, boats) get a 3s yawn warning, then a charge; calms ~20s after the zone empties. knockback feeds ATTACK_KNOCKBACK. Boats die in 2 bites and drop planks+sticks (hardcoded drama). Babies are leashed to half the radius. Phase 3: breed_item melon (also the cage bait); cage_tier 2.",
+	"_tuning_notes": "River hippo, the territory tank. territory.radius = aggro zone in blocks around the water-anchored claim (anchor 'water' snaps the center to the nearest water within 8 at spawn; 'spawn' uses the spawn spot); aggro_inside=false would make it decorative. Intruders (survival players, boats) get a 3s yawn warning, then a charge; calms ~20s after the zone empties. knockback feeds ATTACK_KNOCKBACK. Boats die in 2 bites and drop planks+sticks (hardcoded drama). Babies are leashed to half the radius. Phase 3: breed_item melon (also the cage bait); cage_tier 2. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-4, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:hippo",
 	"species": "river",
 	"biomes": [
 		"#minecraft:is_river"
 	],
-	"weight": 6,
 	"group_size": [
 		2,
 		4
@@ -25,5 +24,13 @@
 	"special": {},
 	"cage_tier": 2,
 	"guide_blurb": "Kills more boats than any reef.",
-	"breed_item": "minecraft:melon_slice"
+	"rarity": "uncommon",
+	"nearby_cap": 6,
+	"breeding": {
+		"items": [
+			"minecraft:melon_slice"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	}
 }

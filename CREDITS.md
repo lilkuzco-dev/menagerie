@@ -1,5 +1,32 @@
 # Credits
 
+## Sources at a glance
+
+Menagerie's sourced art comes from public-domain (Unlicense) mods. Every jar was
+license-verified before import; see `assets/SOURCES.md` for sha256s and the full table.
+Credit below is courtesy — the Unlicense requires none.
+
+- **aquarius_playz** — Animal Garden: Western Gorilla, Lion, Crocodile
+- **RayTrace082** — Untamed Wilds (`untamedanimalz` build)
+- **Joosh, EterDelta** — Critters & Companions
+- **puredoom** — Elephant Mount
+- **M003E, CircleF1sh, Graustreif, Frogge, Jooji!, Chameleon, Rumgie, Proddy** — Herping
+
+Imported so far: the gorilla and the lion. The other sources are cleared and unpacked
+but nothing has been taken from them yet.
+
+## Animal Garden — Lion (aquarius_playz)
+
+The lion's 34-part model, 35 keyframe animations, 15 body skins, 8 eye textures and 14
+sounds are from **Animal Garden - Lion 1.0.3**, public domain under The Unlicense. The
+jar is a native Fabric 26.2 build carrying Mojang names, so the geometry transferred
+verbatim; only its bundled copy of the vanilla animation API needed swapping for
+vanilla's own. Its `aquarius_libs` dependency was **not** vendored — every touchpoint
+already had an equivalent in Menagerie, so the mod stays dependency-clean.
+
+The eye-layer idea (eyes as a separate emissive pass, left and right independent so a
+lion can wink) is theirs and is kept.
+
 ## Animal Garden — Western Gorilla (aquarius_playz)
 
 Menagerie's gorilla model, animations, textures and voice come from

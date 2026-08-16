@@ -43,6 +43,18 @@ public final class MenagerieEvents {
 						continue;
 					}
 					String key = species.entityId() + "|" + species.name();
+					// rare coats are documented separately: seeing an albino is its own event
+					if (mob.hasRareVariant()) {
+						String variantKey = key + "|variant:" + mob.getVariantName();
+						if (discoveries.discover(player.getUUID(), variantKey)) {
+							player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+									"guide.menagerie.discovered_variant",
+									net.minecraft.network.chat.Component.literal(mob.getVariantName())), true);
+							player.level().playSound(null, player.blockPosition(),
+									net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
+									net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 1.6F);
+						}
+					}
 					if (discoveries.discover(player.getUUID(), key)) {
 						String speciesName = species.name().substring(0, 1).toUpperCase() + species.name().substring(1);
 						net.minecraft.network.chat.Component name = net.minecraft.network.chat.Component

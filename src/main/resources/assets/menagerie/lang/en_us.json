@@ -51,5 +51,11 @@
 	"guide.menagerie.title": "Field Guide",
 	"guide.menagerie.progress": "Documented: %s/%s",
 	"guide.menagerie.discovered": "New species documented: %s",
-	"guide.menagerie.undiscovered": "Undocumented. Get within 8 blocks of a living specimen to add it to the guide."
+	"guide.menagerie.undiscovered": "Undocumented. Get within 8 blocks of a living specimen to add it to the guide.",
+	"guide.menagerie.discovered_variant": "Rare variant documented: %s",
+	"entity.menagerie.lion": "Lion",
+	"subtitles.menagerie.lion_ambient": "Lion grumbles",
+	"subtitles.menagerie.lion_roar": "Lion roars",
+	"subtitles.menagerie.lion_hurt": "Lion hurts",
+	"subtitles.menagerie.lion_death": "Lion dies"
 }

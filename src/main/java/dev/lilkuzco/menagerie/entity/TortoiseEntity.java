@@ -44,6 +44,12 @@ public class TortoiseEntity extends SpeciesMob {
 		builder.define(SHELLED, false);
 	}
 
+	/** already registers its own BreedGoal below. */
+	@Override
+	protected boolean hasBreedGoal() {
+		return true;
+	}
+
 	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(1, new BreedGoal(this, 0.8));

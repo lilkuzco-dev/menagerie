@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players \u2014 unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier.",
+	"_tuning_notes": "Black bear: forests, smaller (size_scale), and special.timid makes it FLEE players \u2014 unless cubs are nearby, when mother-aggro overrides everything. Same class as the taiga grizzly. Phase 3: salmon (diet) baits cage traps; needs the reinforced tier. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:grizzly",
 	"species": "black",
 	"biomes": [
 		"#minecraft:is_forest"
 	],
-	"weight": 5,
 	"group_size": [
 		1,
 		3
@@ -29,5 +28,15 @@
 		"timid": true
 	},
 	"cage_tier": 2,
-	"guide_blurb": "Shy, unless you find the cubs first."
+	"guide_blurb": "Shy, unless you find the cubs first.",
+	"rarity": "uncommon",
+	"nearby_cap": 3,
+	"breeding": {
+		"items": [
+			"minecraft:salmon",
+			"minecraft:honey_bottle"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	}
 }

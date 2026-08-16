@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "Nile crocodile in swamps. Neutral on land, ambush predator in water: lunge_range is the scan radius in blocks, grab_ticks the drag duration (40 = 2s with two chews at half attack each). Not tamable, not breedable (no items set). Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
+	"_tuning_notes": "Nile crocodile in swamps. Neutral on land, ambush predator in water: lunge_range is the scan radius in blocks, grab_ticks the drag duration (40 = 2s with two chews at half attack each). Not tamable, not breedable (no items set). Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-2, cap 4). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:crocodile",
 	"species": "nile",
 	"biomes": [
 		"minecraft:swamp"
 	],
-	"weight": 6,
 	"group_size": [
 		1,
 		2
@@ -28,5 +27,16 @@
 			"minecraft:cod"
 		],
 		"scavenges": false
+	},
+	"rarity": "uncommon",
+	"nearby_cap": 4,
+	"breeding": {
+		"items": [
+			"minecraft:salmon",
+			"minecraft:cod",
+			"minecraft:beef"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
 	}
 }

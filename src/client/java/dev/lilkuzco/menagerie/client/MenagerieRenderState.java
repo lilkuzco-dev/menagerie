@@ -20,6 +20,20 @@ public class MenagerieRenderState extends LivingEntityRenderState {
 	public final AnimationState gorillaSitStart = new AnimationState();
 	public final AnimationState gorillaSitLoop = new AnimationState();
 	public final AnimationState gorillaSitEnd = new AnimationState();
+	// lion
+	public int lionLeftEye;
+	public int lionRightEye;
+	public final AnimationState lionBreathing = new AnimationState();
+	public final AnimationState lionTail = new AnimationState();
+	public final AnimationState lionEar = new AnimationState();
+	public final AnimationState lionWink = new AnimationState();
+	public final AnimationState lionSniff = new AnimationState();
+	public final AnimationState lionYawn = new AnimationState();
+	public final AnimationState lionBite = new AnimationState();
+	public final AnimationState lionRoar = new AnimationState();
+	public final AnimationState lionSleepStart = new AnimationState();
+	public final AnimationState lionSleepLoop = new AnimationState();
+	public final AnimationState lionSleepEnd = new AnimationState();
 	// crocodile
 	public float lungeTicks;
 	// tortoise

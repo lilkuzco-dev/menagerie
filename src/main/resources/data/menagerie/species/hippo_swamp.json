@@ -1,15 +1,14 @@
 {
-	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river \u2014 registry proves itself again. Phase 3: breed_item melon (also the cage bait); cage_tier 2.",
+	"_tuning_notes": "Swamp/mangrove hippo: darker hue, a notch smaller (size_scale is the Phase 2 alias for scale), slightly tighter territory. Same entity class as river \u2014 registry proves itself again. Phase 3: breed_item melon (also the cage bait); cage_tier 2. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (2-4, cap 6). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:hippo",
 	"species": "swamp",
 	"biomes": [
 		"minecraft:swamp",
 		"minecraft:mangrove_swamp"
 	],
-	"weight": 5,
 	"group_size": [
 		2,
-		3
+		4
 	],
 	"worldgen_only": false,
 	"health": 55,
@@ -27,5 +26,13 @@
 	"special": {},
 	"cage_tier": 2,
 	"guide_blurb": "The murk has a landlord.",
-	"breed_item": "minecraft:melon_slice"
+	"rarity": "uncommon",
+	"nearby_cap": 6,
+	"breeding": {
+		"items": [
+			"minecraft:melon_slice"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	}
 }

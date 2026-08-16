@@ -69,6 +69,12 @@ public class HippoEntity extends SpeciesMob {
 		return true;
 	}
 
+	/** already registers its own BreedGoal below. */
+	@Override
+	protected boolean hasBreedGoal() {
+		return true;
+	}
+
 	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.4, true));

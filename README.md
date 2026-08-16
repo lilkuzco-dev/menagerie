@@ -5,6 +5,7 @@ Mobs: a flagship gorilla with real troop life plus a growing roster, all built o
 **data-driven species registry** — adding a new species of an existing animal is one
 JSON file, zero Java.
 
+![lion](docs/lion.png)
 ![gorilla](docs/gorilla.png)
 ![roster](docs/lineup.png)
 ![phase 2 roster](docs/lineup_phase2.png)
@@ -94,6 +95,8 @@ built for the headless test battery in `VERIFY.md`.
   species' effective natural-spawn rate (weight 0 = stop respawns) but raising a
   weight needs a server restart. Everything else (stats, items, special knobs) is
   fully live.
+- The vulture is the last hand-made animal — no public-domain source has been found for
+  it, so its art is unchanged.
 - No spawn eggs yet; use `/summon` (plain summon picks the biome-correct species).
 - No loot tables yet — the roster drops nothing by design in Phase 1.
 - `/summon` with extra NBT skips species finalization (vanilla behavior); plain
@@ -115,6 +118,28 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 `build/run-gametest/screenshots/`).
 
 ## Changelog
+
+### 0.4.0 — Renaissance Update, Wave 1 (2026-08-16)
+- **Lion.** A new marquee animal built from the public-domain Animal Garden set: 34-part
+  model, 35 animations, 15 fur variants, separate animated eyes, 14 recorded sounds.
+  Prides work like gorilla troops — one maned male, assigned at spawn — and a lion only
+  starts on a healthy player when the pride is at strength. Savanna and badlands species.
+- **Spawn rarity overhaul.** Rarity tiers (`ubiquitous`/`common`/`uncommon`/`rare`/`epic`)
+  now set spawn weight, group size and a **nearby cap** together, calibrated against
+  vanilla's own anchors. Gorillas drop from weight 8 to **weight 2 — panda-class**. The
+  nearby cap is the important half: CREATURE-category animals never despawn, so without a
+  ceiling they accumulate forever. Tiers live in `menagerie_config/rarity.json` and
+  retune with `/reload`.
+- **`/menagerie cull <entity> <radius> <keep>`** for worlds already overrun, farthest
+  first, and it never touches a tamed or named animal.
+- **Rare variant rolls.** Any species can gain a rare coat in pure JSON. First one:
+  the **albino gorilla** at 5%, rolled once at spawn and persisted, inherited as a chance
+  by babies, otherwise an ordinary gorilla. The Field Guide tracks it separately, so
+  seeing one is its own documented event.
+- **Data-driven breeding.** A `breeding` block gives any species vanilla-style breeding;
+  hippos, bears, lions, leopards and crocodiles are now breedable. Snake and vulture are
+  deliberately not — they are worldgen ambience, and the reasoning is in their JSON.
+- `/menagerie rarity` prints every species' resolved weight, group and cap.
 
 ### 0.3.1 (2026-08-15)
 - **New gorilla visuals.** Model, animations, fur textures and voice replaced with the

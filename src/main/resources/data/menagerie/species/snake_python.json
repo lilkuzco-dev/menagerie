@@ -1,11 +1,10 @@
 {
-	"_tuning_notes": "Jungle python: no venom \u2014 special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey).",
+	"_tuning_notes": "Jungle python: no venom \u2014 special.constrict gives a brief grab on strike (constrict_ticks, reusing the crocodile GrabHold path: drag + heavy slowness, no chewing). Same warning etiquette as the viper. Phase 3: diet.hunts doubles as cage-trap bait (item form of the prey). Deliberately NOT breedable: worldgen ambience animal \u2014 its population is meant to be found, not farmed, and a breedable one would trivially defeat the worldgen_only scarcity. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-1, cap 3). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:snake",
 	"species": "python",
 	"biomes": [
 		"#minecraft:is_jungle"
 	],
-	"weight": 5,
 	"group_size": [
 		1,
 		1
@@ -29,5 +28,7 @@
 			"minecraft:chicken"
 		],
 		"scavenges": false
-	}
+	},
+	"rarity": "uncommon",
+	"nearby_cap": 3
 }

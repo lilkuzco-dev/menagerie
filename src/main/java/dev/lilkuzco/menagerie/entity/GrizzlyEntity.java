@@ -65,6 +65,12 @@ public class GrizzlyEntity extends SpeciesMob {
 		builder.define(SLEEPING, false);
 	}
 
+	/** already registers its own BreedGoal below. */
+	@Override
+	protected boolean hasBreedGoal() {
+		return true;
+	}
+
 	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));

@@ -31,6 +31,11 @@ public final class MenagerieSounds {
 	public static final SoundEvent LEOPARD_DEATH = register("entity.leopard.death");
 	public static final SoundEvent LEOPARD_POUNCE = register("entity.leopard.pounce");
 
+	public static final SoundEvent LION_AMBIENT = register("entity.lion.ambient");
+	public static final SoundEvent LION_HURT = register("entity.lion.hurt");
+	public static final SoundEvent LION_DEATH = register("entity.lion.death");
+	public static final SoundEvent LION_ROAR = register("entity.lion.roar");
+
 	public static final SoundEvent HIPPO_AMBIENT = register("entity.hippo.ambient");
 	public static final SoundEvent HIPPO_HURT = register("entity.hippo.hurt");
 	public static final SoundEvent HIPPO_DEATH = register("entity.hippo.death");

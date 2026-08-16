@@ -42,8 +42,15 @@ public class FieldGuideItem extends Item {
 			for (Species species : byEntity.getValue()) {
 				String key = species.entityId() + "|" + species.name();
 				boolean discovered = discoveries.has(player.getUUID(), key);
-				entries.add(new MenagerieNet.GuideEntry(species.entityId(), species.name(), discovered,
-						discovered ? describe(species) : List.of()));
+				List<String> lines = discovered ? new ArrayList<>(describe(species)) : new ArrayList<>();
+				if (discovered) {
+					for (Species.VariantRoll roll : species.variantRolls()) {
+						boolean seen = discoveries.has(player.getUUID(), key + "|variant:" + roll.name());
+						lines.add((seen ? "\u2713 rare variant documented: " : "\u2717 rare variant unseen: ")
+								+ roll.name() + " (" + Math.round(roll.chance() * 100) + "%)");
+					}
+				}
+				entries.add(new MenagerieNet.GuideEntry(species.entityId(), species.name(), discovered, lines));
 			}
 		}
 		return new MenagerieNet.GuideS2C(entries);

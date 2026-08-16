@@ -1,0 +1,54 @@
+{
+	"entity": "menagerie:lion",
+	"rarity": "rare",
+	"group_size": [
+		3,
+		4
+	],
+	"nearby_cap": 6,
+	"worldgen_only": false,
+	"health": 44,
+	"attack": 8,
+	"speed": 0.31,
+	"knockback": 1.0,
+	"neutral": true,
+	"cage_tier": 2,
+	"breeding": {
+		"items": [
+			"minecraft:beef",
+			"minecraft:mutton",
+			"minecraft:rabbit"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	},
+	"diet": {
+		"hunts": [
+			"minecraft:cow",
+			"minecraft:sheep",
+			"minecraft:rabbit",
+			"minecraft:chicken"
+		],
+		"scavenges": false
+	},
+	"special": {
+		"pride_courage": 3
+	},
+	"species": "barbary",
+	"biomes": [
+		"#minecraft:is_badlands"
+	],
+	"scale": 1.05,
+	"texture": "menagerie:textures/entity/lion/body_8.png",
+	"textures": [
+		"menagerie:textures/entity/lion/body_8.png",
+		"menagerie:textures/entity/lion/body_9.png",
+		"menagerie:textures/entity/lion/body_10.png",
+		"menagerie:textures/entity/lion/body_11.png",
+		"menagerie:textures/entity/lion/body_12.png",
+		"menagerie:textures/entity/lion/body_13.png",
+		"menagerie:textures/entity/lion/body_14.png"
+	],
+	"guide_blurb": "Bigger, darker, and a long way from the grass.",
+	"_tuning_notes": "Barbary-type lion for badlands: the darker half of the source texture set, slightly larger and tougher. Same entity class and pride logic as the savanna lion \u2014 this is the registry doing the work, not Java. RARITY: tier 'rare', pride 3-4, nearby_cap 6."
+}

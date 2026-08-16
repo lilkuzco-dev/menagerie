@@ -42,6 +42,10 @@ public final class MenagerieEntities {
 			EntityType.Builder.of(VultureEntity::new, MobCategory.CREATURE)
 					.sized(0.9F, 0.7F).eyeHeight(0.5F).clientTrackingRange(12));
 
+	public static final EntityType<LionEntity> LION = register("lion",
+			EntityType.Builder.of(LionEntity::new, MobCategory.CREATURE)
+					.sized(1.3F, 1.3F).eyeHeight(1.1F).clientTrackingRange(10));
+
 	public static final EntityType<SnakeEntity> SNAKE = register("snake",
 			EntityType.Builder.of(SnakeEntity::new, MobCategory.CREATURE)
 					.sized(0.8F, 0.35F).eyeHeight(0.25F).clientTrackingRange(8));
@@ -60,6 +64,7 @@ public final class MenagerieEntities {
 		FabricDefaultAttributeRegistry.register(GRIZZLY, SpeciesMob.createSpeciesAttributes());
 		FabricDefaultAttributeRegistry.register(VULTURE, SpeciesMob.createSpeciesAttributes());
 		FabricDefaultAttributeRegistry.register(SNAKE, SpeciesMob.createSpeciesAttributes());
+		FabricDefaultAttributeRegistry.register(LION, SpeciesMob.createSpeciesAttributes());
 
 		SpawnPlacements.register(GORILLA, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
@@ -70,6 +75,8 @@ public final class MenagerieEntities {
 		SpawnPlacements.register(GRIZZLY, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
 		SpawnPlacements.register(SNAKE, SpawnPlacementTypes.ON_GROUND,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
+		SpawnPlacements.register(LION, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, SpeciesMob::checkSpeciesSpawnRules);
 		// crocodiles and hippos may spawn at the water line, so skip the on-ground restriction
 		SpawnPlacements.register(CROCODILE, SpawnPlacementTypes.NO_RESTRICTIONS,

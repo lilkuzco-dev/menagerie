@@ -1,5 +1,6 @@
 package dev.lilkuzco.menagerie.entity;
 
+import dev.lilkuzco.menagerie.data.RarityConfig;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.data.SpeciesRegistry;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -33,6 +35,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
@@ -46,6 +50,9 @@ import org.jspecify.annotations.Nullable;
  */
 public abstract class SpeciesMob extends TamableAnimal {
 	private static final EntityDataAccessor<String> SPECIES =
+			SynchedEntityData.defineId(SpeciesMob.class, EntityDataSerializers.STRING);
+	/** Rare-variant name rolled once at spawn (see Species.VariantRoll); "" for the common coat. */
+	private static final EntityDataAccessor<String> VARIANT =
 			SynchedEntityData.defineId(SpeciesMob.class, EntityDataSerializers.STRING);
 
 	protected SpeciesMob(EntityType<? extends SpeciesMob> type, Level level) {
@@ -65,6 +72,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 		super.defineSynchedData(builder);
 		builder.define(SPECIES, "");
+		builder.define(VARIANT, "");
 	}
 
 	// ---------- species plumbing ----------
@@ -93,14 +101,44 @@ public abstract class SpeciesMob extends TamableAnimal {
 		getAttribute(Attributes.MAX_HEALTH).setBaseValue(species.health());
 		getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(species.speed());
 		getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(species.attack());
-		getAttribute(Attributes.SCALE).setBaseValue(species.scale());
+		double scale = species.scale();
+		if (isBaby() && species.breeding() != null) {
+			scale *= species.breeding().babyScale();
+		}
+		getAttribute(Attributes.SCALE).setBaseValue(scale);
 		getAttribute(Attributes.ATTACK_KNOCKBACK).setBaseValue(species.knockback());
+	}
+
+	public String getVariantName() {
+		return this.entityData.get(VARIANT);
+	}
+
+	public void setVariantName(String variant) {
+		this.entityData.set(VARIANT, variant);
+	}
+
+	public boolean hasRareVariant() {
+		return !getVariantName().isEmpty();
+	}
+
+	/** Roll the rare-coat table once; persisted afterwards so an animal never re-rolls. */
+	protected void rollVariantOnce(Species species) {
+		if (!getVariantName().isEmpty()) {
+			return;
+		}
+		Species.VariantRoll roll = species.rollVariant(getRandom());
+		if (roll != null) {
+			setVariantName(roll.name());
+		}
 	}
 
 	public Identifier texture() {
 		Species species = species();
-		return species != null ? species.texture()
-				: Identifier.fromNamespaceAndPath("minecraft", "textures/entity/pig/temperate_pig.png");
+		if (species == null) {
+			return Identifier.fromNamespaceAndPath("minecraft", "textures/entity/pig/temperate_pig.png");
+		}
+		Species.VariantRoll variant = species.variant(getVariantName());
+		return variant != null ? variant.texture() : species.texture();
 	}
 
 	// ---------- spawn ----------
@@ -133,6 +171,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 		}
 		if (species != null) {
 			setSpecies(species, true);
+			rollVariantOnce(species);
 		}
 		return super.finalizeSpawn(level, difficulty, spawnReason, groupData);
 	}
@@ -175,7 +214,33 @@ public abstract class SpeciesMob extends TamableAnimal {
 				return false;
 			}
 		}
-		return true;
+		// Epic tiers thin further: only a fraction of otherwise-valid attempts survive.
+		if (species.attemptChance() < 1.0F && random.nextFloat() > species.attemptChance()) {
+			return false;
+		}
+		// The accumulation killer. CREATURE-category animals never despawn, so without a
+		// ceiling even a modest weight piles up forever in a long-lived world. Counting
+		// same-type entities nearby is what keeps a jungle reading alive instead of zoo.
+		return !overNearbyCap(type, level, pos, species);
+	}
+
+	/** @return true when there are already enough of this animal near {@code pos}. */
+	private static boolean overNearbyCap(EntityType<? extends Mob> type, LevelAccessor level,
+			BlockPos pos, Species species) {
+		int cap = species.nearbyCap();
+		if (cap <= 0 || !(level instanceof ServerLevel serverLevel)) {
+			return false;
+		}
+		int radius = RarityConfig.NEARBY_RADIUS;
+		AABB box = AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos))
+				.inflate(radius, Math.min(radius, 64), radius);
+		int seen = 0;
+		for (Entity nearby : serverLevel.getEntities(type, box, e -> true)) {
+			if (++seen >= cap) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// ---------- food / taming / breeding ----------
@@ -190,7 +255,24 @@ public abstract class SpeciesMob extends TamableAnimal {
 	@Override
 	public boolean isFood(ItemStack stack) {
 		Species species = species();
-		return species != null && matchesItemId(stack, species.breedItem());
+		if (species == null) {
+			return false;
+		}
+		if (species.breeding() != null) {
+			for (String item : species.breeding().items()) {
+				if (matchesItemId(stack, item)) {
+					return true;
+				}
+			}
+			// a breeding block is authoritative: no accidental fallback food
+			return false;
+		}
+		return matchesItemId(stack, species.breedItem());
+	}
+
+	public boolean breedable() {
+		Species species = species();
+		return species != null && (species.breeding() != null || !species.breedItem().isEmpty());
 	}
 
 	public boolean isTameItem(ItemStack stack) {
@@ -211,6 +293,11 @@ public abstract class SpeciesMob extends TamableAnimal {
 	// ---------- forage / contentment (generic; driven by the species "forage" block) ----------
 	private long contentUntil;
 	private boolean forageGoalAttached;
+
+	/** Animals that already register a BreedGoal in registerGoals must not get a second. */
+	protected boolean hasBreedGoal() {
+		return false;
+	}
 
 	/** A meal just happened (block forage or player feeding). Subclasses may spread it. */
 	public void onForaged() {
@@ -233,6 +320,11 @@ public abstract class SpeciesMob extends TamableAnimal {
 			Species species = species();
 			if (species != null && species.forage() != null) {
 				this.goalSelector.addGoal(6, new dev.lilkuzco.menagerie.entity.ai.ForageGoal(this));
+			}
+			// data-driven breeding: any species declaring a "breeding" block gets the
+			// vanilla breed goal, so adding a breedable animal stays a JSON-only change
+			if (species != null && species.breeding() != null && !hasBreedGoal()) {
+				this.goalSelector.addGoal(4, new net.minecraft.world.entity.ai.goal.BreedGoal(this, 1.0));
 			}
 		}
 	}
@@ -280,6 +372,14 @@ public abstract class SpeciesMob extends TamableAnimal {
 			Species species = species();
 			if (species != null) {
 				speciesChild.setSpecies(species, true);
+				// babies roll the rare coat independently — an albino born to a normal
+				// troop is the jackpot sighting, and it is inherited chance, not colour
+				speciesChild.rollVariantOnce(species);
+			}
+			// a calf born to two tamed parents belongs to their owner from the start
+			if (isTame() && partner instanceof SpeciesMob other && other.isTame() && getOwner() != null) {
+				speciesChild.setTame(true, true);
+				speciesChild.setOwner(getOwner());
 			}
 		}
 		return child;
@@ -290,6 +390,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 	protected void addAdditionalSaveData(ValueOutput output) {
 		super.addAdditionalSaveData(output);
 		output.putString("menagerie_species", getSpeciesName());
+		output.putString("menagerie_variant", getVariantName());
 		output.putLong("menagerie_content_until", contentUntil);
 	}
 
@@ -297,6 +398,7 @@ public abstract class SpeciesMob extends TamableAnimal {
 	protected void readAdditionalSaveData(ValueInput input) {
 		super.readAdditionalSaveData(input);
 		contentUntil = input.getLongOr("menagerie_content_until", 0L);
+		this.entityData.set(VARIANT, input.getStringOr("menagerie_variant", ""));
 		String name = input.getStringOr("menagerie_species", "");
 		this.entityData.set(SPECIES, name);
 		// re-apply attributes from (possibly retuned) JSON, keep current health fraction

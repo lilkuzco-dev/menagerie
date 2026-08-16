@@ -6,6 +6,7 @@ import dev.lilkuzco.menagerie.client.model.GorillaModel;
 import dev.lilkuzco.menagerie.client.model.GrizzlyModel;
 import dev.lilkuzco.menagerie.client.model.HippoModel;
 import dev.lilkuzco.menagerie.client.model.LeopardModel;
+import dev.lilkuzco.menagerie.client.model.LionModel;
 import dev.lilkuzco.menagerie.client.model.SnakeModel;
 import dev.lilkuzco.menagerie.client.model.TortoiseModel;
 import dev.lilkuzco.menagerie.client.model.VultureModel;
@@ -34,6 +35,8 @@ public class MenagerieClient implements ClientModInitializer {
 	public static final ModelLayerLocation GRIZZLY_BABY = layer("grizzly_baby");
 	public static final ModelLayerLocation VULTURE = layer("vulture");
 	public static final ModelLayerLocation VULTURE_BABY = layer("vulture_baby");
+	public static final ModelLayerLocation LION = layer("lion");
+	public static final ModelLayerLocation LION_BABY = layer("lion_baby");
 	public static final ModelLayerLocation SNAKE = layer("snake");
 	public static final ModelLayerLocation SNAKE_BABY = layer("snake_baby");
 
@@ -62,6 +65,8 @@ public class MenagerieClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(GRIZZLY_BABY, () -> GrizzlyModel.createBodyLayer().apply(BABY));
 		ModelLayerRegistry.registerModelLayer(VULTURE, VultureModel::createBodyLayer);
 		ModelLayerRegistry.registerModelLayer(VULTURE_BABY, () -> VultureModel.createBodyLayer().apply(BABY));
+		ModelLayerRegistry.registerModelLayer(LION, LionModel::createBodyLayer);
+		ModelLayerRegistry.registerModelLayer(LION_BABY, () -> LionModel.createBodyLayer().apply(BABY));
 		ModelLayerRegistry.registerModelLayer(SNAKE, SnakeModel::createBodyLayer);
 		ModelLayerRegistry.registerModelLayer(SNAKE_BABY, () -> SnakeModel.createBodyLayer().apply(BABY));
 
@@ -90,6 +95,7 @@ public class MenagerieClient implements ClientModInitializer {
 		EntityRendererRegistry.register(MenagerieEntities.VULTURE, context -> new SpeciesRenderer<>(context,
 				new VultureModel(context.bakeLayer(VULTURE)), new VultureModel(context.bakeLayer(VULTURE_BABY)),
 				0.5F, (entity, state) -> state.flying = entity.isFlyingState()));
+		EntityRendererRegistry.register(MenagerieEntities.LION, LionRenderer::new);
 		EntityRendererRegistry.register(MenagerieEntities.SNAKE, context -> new SpeciesRenderer<>(context,
 				new SnakeModel(context.bakeLayer(SNAKE)), new SnakeModel(context.bakeLayer(SNAKE_BABY)),
 				0.4F, (entity, state) -> {

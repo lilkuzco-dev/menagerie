@@ -105,3 +105,40 @@ the usual dev server (port 25567) + carpet fake player over RCON. Census gained 
   logic) need live-AI mobs; only pose/framing shots should pin with `NoAI`.
 - Gorilla `hurt`/`death`/`eat` remain pitch-shifted vanilla events: the source jar
   ships no recordings for them, and silence would be worse than a stand-in.
+
+---
+
+# Menagerie 0.4.0 — Renaissance Update (Wave 1)
+
+Date: 2026-08-16. Client checks via `./gradlew runGametest`; framework checks on the dev
+server (port 25567) over RCON with a carpet fake player. Census gained `|fur=<name>`
+(which now also reports a rare variant) and a new `/menagerie rarity` readout.
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | Seven source jars license-cleared | **PASS** — each declares `license="Unlicense"` *and* ships the full dedication text, both read directly. sha256s recorded in `assets/SOURCES.md`. The Untamed Wilds GPL-vs-Unlicense discrepancy is documented there rather than papered over. |
+| 2 | Lion renders (new marquee animal) | **PASS** — `docs/lion.png`: four lions standing on the sourced 34-part model with correct tawny skins, and the separate eye layer rendering. No UV scramble, no missing-texture or unknown-sound warnings. |
+| 3 | Lion animations | **PASS** — walk/run blend by speed, breathing loops, and the resting/sleep state machine runs. **Bug found and fixed:** `isResting()` originally keyed off "navigation is done", which is true constantly — every idle lion lay down mid-stroll. Now requires ~5s genuinely stationary and ignores `NoAI`. |
+| 4 | Field Guide auto-adopts new species | **PASS** — the lion triggered "New species documented: Savanna Lion" on first approach with **zero hand-written entry text**; the entry is generated from its species JSON. Guide total moved 14 → 16 species. |
+| 5 | Albino gorilla renders | **PASS** — `docs/gorilla_albino.png`: cream coat with pink face and hands beside a normal black adult. **Bug found and fixed:** `GorillaEntity` overrides `texture()` for its fur table and initially ignored the rare variant, so the albino rendered black while the discovery ping fired. Rare coats now outrank the fur table. |
+| 6 | Albino rate is the configured 5% | **PASS** — 200 plain spawns in four batches of 50: 1 + 1 + 3 + 5 = **10 albinos = 5.0%**, dead on the JSON value (prompt accepted 4-18). Note NBT `/summon` skips `finalizeSpawn` and therefore never rolls — natural spawns and breeding do. |
+| 7 | Variant persists, never re-rolls | **PASS** — an albino was tagged, `save-all`, the server fully stopped and restarted: `menagerie_variant` still `"albino"`, census still `fur=albino`. |
+| 8 | Rarity table resolves | **PASS** — `/menagerie rarity` across all 16 species; **gorilla is now weight 2 (panda-class), down from 8**, troop 3-5, cap 8. |
+| 9 | Rarity hot-reload | **PASS** — `rare` weight 2 → 6 in the live datapack + `/reload` → gorilla weight reads 6; restored → reads 2. No rebuild. The gorilla's `nearby_cap` stayed 8 throughout, correctly overriding the tier's value (documented precedence). |
+| 10 | `/menagerie cull` protects tamed and named | **PASS** — 12 gorillas (10 wild, 1 named "Kong", 1 tamed) culled to keep 3: 7 removed, both Kong and the pet survived. (The "spared" counter reported 1 because the other protected animal had wandered outside the cull radius at scan time — wild animals move.) |
+| 11 | Data-driven breeding | **PASS** — hippos, which had **no breeding path before this release**, entered love mode from melon slices via the new `breeding` block and produced a calf (census `hippo|river|baby`). Snake and vulture carry no breeding block by design, with the reasoning recorded in their `_tuning_notes`. |
+| 12 | Build | **PASS** — clean `./gradlew build`; still Fabric-API-only, no new runtime dependency. |
+
+## Not verified in this release — stated plainly
+
+- **The nearby-species cap is implemented but not empirically proven.** It gates natural
+  spawns only, and forcing natural spawn attempts on demand is not something the command
+  surface allows; proving it needs the density transects below.
+- **Density transects (jungle/savanna/river counts vs vanilla panda) were not run.** They
+  are the real proof that the calibration lands, and they need a fresh world plus long
+  flights. The numbers are set and readable via `/menagerie rarity`, but the in-world
+  density claim is currently a prediction, not a measurement.
+- **The 15-minute spawn soak / MSPT check was not run.**
+- Waves 1 (crocodile and the Untamed Wilds ports), 2 (rhino, hyena, elephant) and 3
+  (critters, companions) are **not in this release**. Their sources are unpacked,
+  license-cleared and inventoried; nothing has been imported from them.

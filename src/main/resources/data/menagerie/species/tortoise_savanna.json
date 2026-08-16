@@ -1,12 +1,11 @@
 {
-	"_tuning_notes": "Savanna/badlands tortoise. worldgen_only true = Untamed Wilds style: spawns with newly generated chunks only, never naturally respawns \u2014 killing them permanently empties the area, and they drop nothing. shell_armor/shell_ticks tune the retreat (+8 armor, immobile, 10s). Breeds with sweet berries (breed_item), never tames.",
+	"_tuning_notes": "Savanna/badlands tortoise. worldgen_only true = Untamed Wilds style: spawns with newly generated chunks only, never naturally respawns \u2014 killing them permanently empties the area, and they drop nothing. shell_armor/shell_ticks tune the retreat (+8 armor, immobile, 10s). Breeds with sweet berries (breed_item), never tames. RARITY: tier 'uncommon' supplies the spawn weight; group_size and nearby_cap are pinned here (1-3, cap 4). nearby_cap denies natural spawns when that many of this animal are already within 64 blocks \u2014 the fix for persistent CREATURE mobs accumulating forever.",
 	"entity": "menagerie:tortoise",
 	"species": "savanna",
 	"biomes": [
 		"#minecraft:is_savanna",
 		"#minecraft:is_badlands"
 	],
-	"weight": 8,
 	"group_size": [
 		1,
 		3
@@ -15,7 +14,6 @@
 	"health": 20,
 	"attack": 0,
 	"speed": 0.18,
-	"breed_item": "minecraft:sweet_berries",
 	"neutral": true,
 	"texture": "menagerie:textures/entity/tortoise/savanna.png",
 	"special": {
@@ -23,5 +21,14 @@
 		"shell_ticks": 200
 	},
 	"cage_tier": 1,
-	"guide_blurb": "Outlives everything that bothers it."
+	"guide_blurb": "Outlives everything that bothers it.",
+	"rarity": "uncommon",
+	"nearby_cap": 4,
+	"breeding": {
+		"items": [
+			"minecraft:sweet_berries"
+		],
+		"cooldown_ticks": 6000,
+		"baby_scale": 0.5
+	}
 }
