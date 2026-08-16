@@ -119,6 +119,21 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 
 ## Changelog
 
+### 0.4.4 — Every lion coat actually renders (2026-08-16)
+
+- **13 of the lion's 15 declared coats were unreachable.** `lion_savanna` declares 8
+  and `lion_barbary` 7, but the per-individual fur pick lived only in the gorilla's
+  entity class, so every lion rendered its species' base skin. The pick now lives in
+  the shared species resolver, so any species with a `textures` list gets it with zero
+  Java. Lions visibly vary within a pride now.
+- Asset-path validation could never catch this — every declared texture existed and
+  shipped. Two new guards do: the build asserts the shared resolver still reads the fur
+  table and that no entity subclass overrides it without delegating, and the render
+  battery force-spawns **every** skin index (searching for a UUID that lands on each,
+  rather than sampling) and proves none renders the placeholder. 34/34 skins.
+- `tools/asset-audit.py --skin-matrix` prints the per-species roll-range table: skins
+  the renderer can select vs textures shipped, plus any file no species can ever roll.
+
 ### 0.4.3 — Audit sweep 2 (2026-08-16)
 
 Follow-up sweep over 0.4.2's own verification. No new defect in shipped behavior; four

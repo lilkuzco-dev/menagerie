@@ -4,6 +4,7 @@ import dev.lilkuzco.menagerie.Menagerie;
 import dev.lilkuzco.menagerie.data.RarityConfig;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.data.SpeciesRegistry;
+import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -199,8 +200,21 @@ public abstract class SpeciesMob extends TamableAnimal {
 		if (species == null) {
 			return null;
 		}
+		// a rare coat outranks the per-individual fur table
 		Species.VariantRoll variant = species.variant(getVariantName());
-		return variant != null ? variant.texture() : species.texture();
+		if (variant != null) {
+			return variant.texture();
+		}
+		// The fur table is DATA, so it is honoured here for every animal rather than in
+		// one entity subclass. It used to live in GorillaEntity alone, which left the
+		// lion's 15 declared coats inert: every lion drew its species' base skin and 13
+		// shipped textures were unreachable. Adding a fur table is now zero Java, like
+		// every other species field.
+		List<Identifier> furs = species.textures();
+		if (furs.size() > 1) {
+			return furs.get(Math.floorMod(getUUID().hashCode(), furs.size()));
+		}
+		return species.texture();
 	}
 
 	/**

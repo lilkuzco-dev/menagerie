@@ -170,25 +170,12 @@ public class GorillaEntity extends SpeciesMob {
 		super.onForaged(); // set the timer without re-broadcasting (no infinite recursion)
 	}
 
-	/**
-	 * Fur colour is a per-individual pick from the species' texture list (stable for the
-	 * life of the entity). The silverback's saddle is NOT a texture swap any more — it is
-	 * a translucent overlay layer, so it composes with whichever fur this gorilla drew.
-	 */
-	@Override
-	protected @Nullable Identifier resolveTexture() {
-		Species species = species();
-		if (species == null || species.textures().isEmpty()) {
-			return super.resolveTexture();
-		}
-		// a rare coat outranks the fur table — super.resolveTexture() resolves variant_rolls
-		if (hasRareVariant() && species.variant(getVariantName()) != null) {
-			return super.resolveTexture();
-		}
-		List<Identifier> options = species.textures();
-		int pick = Math.floorMod(getUUID().hashCode(), options.size());
-		return options.get(pick);
-	}
+	// Fur colour is a per-individual pick from the species' texture list, stable for the
+	// life of the entity. It used to be implemented here; it now lives in
+	// SpeciesMob.resolveTexture() so every species with a `textures` list gets it — the
+	// lion declared 15 coats and rendered one, because this override was gorilla-only.
+	// The silverback's saddle is NOT a texture swap: it is a translucent overlay layer,
+	// so it composes with whichever fur this gorilla drew.
 
 	public @Nullable UUID getTroopId() {
 		return troopId;

@@ -234,6 +234,9 @@ def main():
     ap.add_argument("--vanilla-assets",
                     help="loom assets dir (indexes/ + objects/), for vanilla sound events")
     ap.add_argument("--matrix")
+    ap.add_argument("--skin-matrix", action="store_true",
+                    help="print the per-species roll-range table (skins the renderer can "
+                         "select vs textures actually shipped)")
     args = ap.parse_args()
 
     shipped = read_shipped(args.jar)
@@ -385,6 +388,39 @@ def main():
         if ev not in registered:
             a.fail("b", f"sounds.json defines {ev} but no Java SoundEvent registers it")
 
+    # ---- 4a. the fur table must be reachable by CODE, not just declared -------
+    # A species can declare N coats and still render one, if the code that picks from
+    # `textures` lives in a single entity subclass. That is exactly what happened: the
+    # fur pick sat in GorillaEntity, so the lion's 15 declared coats were inert and 13
+    # shipped textures were unreachable. Path validation cannot see this — every path
+    # existed. So assert the SHAPE: the shared resolver owns the fur pick, and no
+    # subclass may override it without delegating.
+    entity_dir = os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco", NS, "entity")
+    base = open(os.path.join(entity_dir, "SpeciesMob.java")).read()
+    base_resolver = re.search(r"protected @Nullable Identifier resolveTexture\(\).*?\n\t\}",
+                              base, re.S)
+    a.anchor(base_resolver is not None, "found SpeciesMob.resolveTexture() to inspect")
+    if base_resolver:
+        body = base_resolver.group(0)
+        a.anchor("textures()" in body,
+                 "SpeciesMob.resolveTexture() reads the species fur table (textures())")
+        if "textures()" not in body:
+            a.fail("b", "SpeciesMob.resolveTexture() no longer consults species.textures() — "
+                        "every multi-coat species would silently render one skin")
+    overriders = []
+    for f in sorted(os.listdir(entity_dir)):
+        if not f.endswith(".java") or f == "SpeciesMob.java":
+            continue
+        src_e = open(os.path.join(entity_dir, f)).read()
+        m = re.search(r"Identifier resolveTexture\(\).*?\n\t\}", src_e, re.S)
+        if m:
+            overriders.append(f)
+            if "super.resolveTexture()" not in m.group(0):
+                a.fail("b", f"{f} overrides resolveTexture() without ever delegating to "
+                            f"super — it can silently drop the species fur table")
+    print(f"             resolveTexture overrides in entity subclasses: "
+          f"{', '.join(overriders) if overriders else 'none (fur table is fully data-driven)'}")
+
     # ---- 4b. lang coverage ---------------------------------------------------
     # A registered thing with no lang key renders as a raw key ("entity.menagerie.x")
     # in nameplates, the guide and cage labels. Nothing else catches it.
@@ -485,6 +521,9 @@ def main():
     for ok, msg in a.anchors:
         print(f"             anchor {'OK  ' if ok else 'FAIL'} {msg}")
 
+    if args.skin_matrix:
+        print_skin_matrix(species, shipped, a)
+
     if args.matrix:
         write_matrix(args.matrix, species, a)
 
@@ -506,6 +545,59 @@ def main():
 
     print("\nasset-audit: PASS — every requestable asset path resolves")
     return 0
+
+
+def print_skin_matrix(species, shipped, a):
+    """
+    The roll-range table: for each species, every skin the renderer can SELECT, held
+    against the textures that actually ship.
+
+    This is the shape of the Untamed Wilds trap. Their data declares a skin COUNT
+    (hippo: "skins": 30) while the jar ships three files, and their code clamps the roll
+    to what exists. A transplant that copies the count and rolls 1..N instead requests
+    common_4..common_30 and checkerboards on every high roll. Menagerie never stores a
+    count: a species enumerates its skins as explicit paths, so the roll range IS the
+    list and "declared" and "shipped" cannot disagree without failing class (a) or (b)
+    above. This table makes that property visible per species rather than implied.
+    """
+    print()
+    print("  ROLL-RANGE TABLE — skins the renderer can select vs textures shipped")
+    print(f"  {'species':22s} {'base':>4s} {'fur[]':>5s} {'variants':>8s} "
+          f"{'= rollable':>10s} {'shipped':>7s}  verdict")
+    print("  " + "-" * 78)
+    folders = defaultdict(set)
+    for res in shipped:
+        m = re.match(rf"assets/{NS}/textures/entity/([^/]+)/([^/]+\.png)$", res)
+        if m:
+            folders[m.group(1)].add(m.group(2))
+    per_entity_rollable = defaultdict(set)
+    rows = []
+    for name, entity, sp, doc in species:
+        base = {doc["texture"]}
+        furs = set(doc.get("textures", []))
+        variants = {v["texture"] for v in doc.get("variant_rolls", {}).values()}
+        rollable = base | furs | variants
+        per_entity_rollable[entity] |= rollable
+        missing = [t for t in sorted(rollable)
+                   if f"assets/{NS}/{t.split(':', 1)[1]}" not in shipped]
+        rows.append((name, entity, len(base), len(furs), len(variants), rollable, missing))
+        verdict = "PASS" if not missing else "FAIL missing " + ", ".join(missing)
+        print(f"  {name:22s} {len(base):>4d} {len(furs):>5d} {len(variants):>8d} "
+              f"{len(rollable):>10d} {len(rollable) - len(missing):>7d}  {verdict}")
+    print("  " + "-" * 78)
+    # per-entity folder view: does anything ship that no species can ever select?
+    print(f"  {'entity folder':22s} {'files':>5s} {'selectable':>10s}  orphans (never rolled)")
+    for entity in sorted(folders):
+        files = folders[entity]
+        selectable = {t.split("/")[-1] for t in per_entity_rollable.get(entity, set())}
+        orphans = sorted(f for f in files
+                         if f not in selectable
+                         and f"{NS}:textures/entity/{entity}/{f}" not in a.requests)
+        print(f"  {entity:22s} {len(files):>5d} {len(selectable):>10d}  "
+              f"{', '.join(orphans) if orphans else '—'}")
+    total = sum(len(r[5]) for r in rows)
+    bad = sum(len(r[6]) for r in rows)
+    print(f"\n  {total} rollable skins across {len(rows)} species; {bad} unresolvable")
 
 
 def write_matrix(path, species, a):

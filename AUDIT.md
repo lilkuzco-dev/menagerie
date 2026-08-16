@@ -381,6 +381,115 @@ forensics pass.
 
 ---
 
+## Sweep 3 (0.4.4) — the skin roll range
+
+Prompted by a specific hypothesis: Untamed Wilds' `hippo.json` declares `"skins": 30`
+while the jar ships three files (`common_1..3.png`), their code clamps the roll to what
+exists, and a transplant that copied the count would request `common_4..common_30` and
+checkerboard intermittently on high rolls.
+
+**The source-data reading is exactly right.** Confirmed in
+`work/sources/untamedanimalz-1.18.2-2.4.3-open-source/data/untamedwilds/entities/hippo.json`:
+`"skins": 30`, and `assets/untamedwilds/textures/entity/hippo/` contains exactly
+`common_1.png`, `common_2.png`, `common_3.png`. It is a real trap in the source.
+
+### The numbers, for the hippo
+
+| | count |
+|---|---|
+| Skins **our code can select** for hippo | **2** — one per species (`hippo/river.png`, `hippo/swamp.png`). No `textures[]`, no `variant_rolls`, no count field. |
+| Hippo textures **shipped in our jar** | **2** — `hippo/river.png`, `hippo/swamp.png` |
+| `common_*.png` anywhere in our jar or tree | **0** |
+| Occurrences of `"skins"` / a skin-count in our source | **0** |
+
+Menagerie never stores a skin *count*. A species enumerates its skins as explicit
+paths, so the roll range **is** the list and there is no index arithmetic to overflow.
+The hippo was also never transplanted — its art is painted by `tools/gen-textures.js`;
+the only verbatim asset transplants are the gorilla and lion (both Animal Garden).
+
+### But the sweep found the same defect class elsewhere — in the lion
+
+Running the ordered force-spawn-every-index test caught a real bug, in the **safe**
+direction (over-declared rather than over-rolled, so it lost variety instead of
+checkerboarding):
+
+> `lion_savanna` declares **8** coats and `lion_barbary` **7**. Every lion rendered its
+> species' base skin — `body_0` or `body_8`. **13 of 15 lion textures were unreachable.**
+
+Cause: the per-individual fur pick lived in `GorillaEntity.resolveTexture()` alone.
+`LionEntity` has no texture code at all, so its `textures[]` was inert data. Path
+validation could never see this — every declared path existed and shipped. Only
+rendering every index exposed it.
+
+**Fix:** the fur pick moved into `SpeciesMob.resolveTexture()`, so any species declaring
+a `textures` list gets it with zero Java — the registry's stated promise. The
+gorilla-specific override was deleted.
+
+**New build-time guard** (path checks cannot catch a *shape* problem): the audit now
+asserts the shared resolver still reads `species.textures()`, and that no entity
+subclass overrides `resolveTexture()` without delegating to `super`. Negative-tested —
+reverting the fur pick out of the shared resolver fails the build on both the rule and
+its anchor.
+
+### Roll-range table (`tools/asset-audit.py --skin-matrix`)
+
+```
+  species                base fur[] variants = rollable shipped  verdict
+  ------------------------------------------------------------------------------
+  crocodile_nile            1     0        0          1       1  PASS
+  crocodile_saltwater       1     0        0          1       1  PASS
+  gorilla_lowland           1     3        1          4       4  PASS
+  gorilla_mountain          1     2        1          3       3  PASS
+  grizzly_black             1     0        0          1       1  PASS
+  grizzly_taiga             1     0        0          1       1  PASS
+  hippo_river               1     0        0          1       1  PASS
+  hippo_swamp               1     0        0          1       1  PASS
+  leopard_jungle            1     0        0          1       1  PASS
+  leopard_snow              1     0        0          1       1  PASS
+  lion_barbary              1     7        0          7       7  PASS
+  lion_savanna              1     8        0          8       8  PASS
+  snake_python              1     0        0          1       1  PASS
+  snake_viper               1     0        0          1       1  PASS
+  tortoise_savanna          1     0        0          1       1  PASS
+  vulture_griffon           1     0        0          1       1  PASS
+  ------------------------------------------------------------------------------
+  entity folder          files selectable  orphans (never rolled)
+  crocodile                  2          2  —
+  gorilla                    7          6  —
+  grizzly                    2          2  —
+  hippo                      2          2  —
+  leopard                    2          2  —
+  lion                      15         15  —
+  snake                      2          2  —
+  tortoise                   1          1  —
+  vulture                    1          1  —
+
+  34 rollable skins across 16 species; 0 unresolvable
+```
+
+### Force-spawning every index
+
+The fur pick is `floorMod(getUUID().hashCode(), n)`, so rather than spawning many and
+hoping to observe each index, the battery **searches for a UUID that lands on each
+index** and summons with it. Every skin index is hit exactly and deterministically, not
+sampled. Variant coats are forced by NBT.
+
+Result after the fix: **34/34 skins rendered, zero placeholders** — `skin sweep
+finished: every skin rendered`. Screenshots: `mp_skins_0..5.png`. Lions now visibly
+vary within a pride.
+
+### Why the amber checkerboard was never this bug
+
+A **missing** texture file cannot render amber. Minecraft substitutes *its own*
+magenta/black checkerboard when a path does not resolve. Magenta/amber is
+`menagerie:textures/entity/missing.png` — a file that ships and loads (asserted on the
+client in sweep 2) — and it is returned by exactly one code path: no skin was synced and
+the client has no registry. That is a **server** older than the client, confirmed
+independently via the panel API: the live server was still running `menagerie-0.4.1.jar`
+while the client had 0.4.3.
+
+---
+
 ## Deviations — flagged, reviewed, deliberately unchanged
 
 * **`leopard_jungle` stays in the jungle family.** The brief's ecology table groups
