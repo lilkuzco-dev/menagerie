@@ -136,3 +136,58 @@ deliberate — Fabric bakes biome spawn lists once per server run.
   deflection worked outside-in (idle soldiers pathed out of live territories in
   testing), so the API-only fallback wasn't needed. `MenagerieTerritories` is a
   public API any mod can query; `TERRITORY_ACTIVE` is the fabric-style event.
+
+---
+
+## Gorilla visual replacement (v0.3.1, 2026-08-15)
+
+### License
+
+| Source | License (verified in the artifact itself) | What we may take |
+|--------|-------------------------------------------|------------------|
+| `animalgarden-westerngorilla-1.0.1` by aquarius_playz | **The Unlicense — public domain.** The jar contains a full `UNLICENSE` file (complete dedication text) and `META-INF/mods.toml` declares `license="Unlicense"`. Both read directly before any import. | **Everything** — assets and code alike, no attribution required. Credited in `CREDITS.md` as a courtesy. |
+
+This is the first source in the project cleared for verbatim asset reuse; every other
+animal remains vanilla-remix art per the standing doctrine.
+
+### Porting notes (Forge 1.20.1 → Fabric 26.2)
+
+- The jar is a **production Forge build**: vanilla references are SRG-obfuscated
+  (`m_232275_`, `f_232230_`, …). Decompiled with Vineflower 1.12.0, then every SRG
+  name was resolved before conversion — **not guessed**. Two independent lines of
+  evidence agreed: (a) an empirical pass over the data (Targets pair 1:1 with vec
+  helpers; positions max out at 7.0 while rotations reach 152°; `scaleVec` is the
+  only double-typed helper), and (b) an external remap table listing the obf/Mojmap/
+  yarn/SRG names side by side. **The frequency heuristic would have inverted
+  LINEAR/CATMULLROM** — `f_232229_` is LINEAR despite being the rarer of the two here
+  (this animator favours smooth keyframes). Worth remembering: declaration order and
+  usage frequency are both unreliable for SRG disambiguation.
+- 26.2 has a **baked keyframe API** (`AnimationDefinition.bake(root)` →
+  `KeyframeAnimation.apply(state, ageInTicks)` / `applyWalk(...)`), so the mod's
+  hand-rolled reflective animation runner (`ModMobModel.animate`, `ModAnimationState`)
+  was dropped entirely rather than ported. `bake()` throws if a bone is missing, so
+  all 20 animated bone names were cross-checked against the 26 model parts first.
+- Model part offsets are **additive** (`offsetPos/Rotation/Scale`), and `scaleVec`
+  subtracts 1 — so an absolute look-at rotation set before applying animations
+  composes correctly instead of fighting them.
+- `AnimationState` lives on the entity and is copied into the render state each frame
+  (vanilla Armadillo pattern). Triggers reuse our existing entity-event broadcasts,
+  so the animation work added no new networking.
+- Silverback presentation switched from a per-species `_silverback.png` texture swap
+  to their **translucent overlay layer** (`RenderTypes.entityTranslucent` at
+  `0x80FFFFFF`): one saddle skin composes with all five fur colours instead of
+  needing a silverback copy of each. Our 1.15× scale and +50% attack are unchanged.
+
+### AI goals reviewed (ported only what was clearly better)
+
+- **`ModFollowMaleGoal` → PORTED** as `FollowSilverbackGoal`. It filled a real gap:
+  our troop members had no cohesion goal and wandered independently. Retargeted from
+  their gender check to our troop ids, and exempted tamed gorillas (they follow their
+  owner). Distances kept (follow past ~7 blocks, give up past ~17).
+- **`ModLeapAtTargetGoal` → SKIPPED.** It is vanilla's `LeapAtTargetGoal` plus a
+  cooldown; a leaping heavyweight also fights the knuckle-walker read we want. Not
+  clearly superior, so not taken.
+- `ModMeleeAttackGoal`, `ModBreedGoal`, `ModFollowParentGoal`,
+  `ModNearestAttackableTargetGoal`, `ModOwnerHurt*` → **SKIPPED**: they re-implement
+  vanilla goals around the mod's own gender/behaviour-type state machine, which our
+  troop/taming/disposition logic already covers more richly.

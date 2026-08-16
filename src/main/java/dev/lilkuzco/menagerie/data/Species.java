@@ -33,6 +33,7 @@ public record Species(
 		String breedItem,
 		boolean neutral,
 		Identifier texture,
+		List<Identifier> textures,
 		JsonObject special,
 		@org.jspecify.annotations.Nullable Territory territory,
 		@org.jspecify.annotations.Nullable Diet diet,
@@ -118,6 +119,11 @@ public record Species(
 				GsonHelper.getAsString(json, "breed_item", tame),
 				GsonHelper.getAsBoolean(json, "neutral", true),
 				Identifier.parse(GsonHelper.getAsString(json, "texture")),
+				// optional "textures": per-individual fur variants; defaults to just "texture"
+				json.has("textures")
+						? GsonHelper.getAsJsonArray(json, "textures").asList().stream()
+								.map(e -> Identifier.parse(e.getAsString())).toList()
+						: List.of(Identifier.parse(GsonHelper.getAsString(json, "texture"))),
 				GsonHelper.getAsJsonObject(json, "special", new JsonObject()),
 				json.has("territory") ? Territory.fromJson(GsonHelper.getAsJsonObject(json, "territory")) : null,
 				json.has("diet") ? Diet.fromJson(GsonHelper.getAsJsonObject(json, "diet")) : null,

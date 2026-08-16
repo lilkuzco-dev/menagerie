@@ -4,6 +4,7 @@ import dev.lilkuzco.menagerie.MenagerieSounds;
 import dev.lilkuzco.menagerie.data.Species;
 import dev.lilkuzco.menagerie.entity.ai.BabyRideAdultGoal;
 import dev.lilkuzco.menagerie.entity.ai.FoliageTearGoal;
+import dev.lilkuzco.menagerie.entity.ai.FollowSilverbackGoal;
 import dev.lilkuzco.menagerie.entity.ai.TroopRetaliateGoal;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -59,6 +61,8 @@ public class GorillaEntity extends SpeciesMob {
 	private static final Identifier SILVERBACK_ATTACK_ID = Identifier.fromNamespaceAndPath("menagerie", "silverback_attack");
 	private static final byte EVENT_CHEST_BEAT = 64;
 	private static final byte EVENT_EAT_LEAVES = 65;
+	private static final byte EVENT_PUNCH = 71;
+	private static final byte EVENT_HOOT = 72;
 	private static final int PROMOTION_SCAN_INTERVAL = 40;
 	private static final int PROMOTION_DELAY_TICKS = 1200; // 60s without a silverback
 
@@ -68,9 +72,21 @@ public class GorillaEntity extends SpeciesMob {
 	private int hostileBeatCooldown;
 	private int serverBeatTicks;
 
-	// client-side animation clocks, driven by entity events
-	public int clientBeatTicks;
-	public int clientEatTicks;
+	// client-side keyframe animation states (see tick()/handleEntityEvent)
+	public final AnimationState breathingAnimationState = new AnimationState();
+	public final AnimationState chestPumpAnimationState = new AnimationState();
+	public final AnimationState eatAnimationState = new AnimationState();
+	public final AnimationState punchAnimationState = new AnimationState();
+	public final AnimationState winkAnimationState = new AnimationState();
+	public final AnimationState sniffAnimationState = new AnimationState();
+	public final AnimationState soundAnimationState = new AnimationState();
+	public final AnimationState sitStartAnimationState = new AnimationState();
+	public final AnimationState sitLoopAnimationState = new AnimationState();
+	public final AnimationState sitEndAnimationState = new AnimationState();
+	/** fromNormalToSitting / fromSittingToNormal are both 0.5s of keyframes. */
+	private static final int SIT_TRANSITION_TICKS = 10;
+	private boolean lastSittingPose;
+	private int sitTransitionTicks;
 
 	public GorillaEntity(EntityType<? extends GorillaEntity> type, Level level) {
 		super(type, level);
@@ -92,7 +108,8 @@ public class GorillaEntity extends SpeciesMob {
 		this.goalSelector.addGoal(5, new TemptGoal(this, 1.1, stack -> isFood(stack) || isTameItem(stack), false));
 		this.goalSelector.addGoal(6, new BabyRideAdultGoal(this));
 		this.goalSelector.addGoal(7, new FoliageTearGoal(this));
-		this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.9) {
+		this.goalSelector.addGoal(8, new FollowSilverbackGoal(this, 1.0));
+		this.goalSelector.addGoal(9, new WaterAvoidingRandomStrollGoal(this, 0.9) {
 			@Override
 			public boolean canUse() {
 				// hungry troops roam restlessly; content ones lounge near the food
@@ -100,8 +117,8 @@ public class GorillaEntity extends SpeciesMob {
 				return super.canUse();
 			}
 		});
-		this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
-		this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
+		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 8.0F));
+		this.goalSelector.addGoal(11, new RandomLookAroundGoal(this));
 
 		this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
 		this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
@@ -146,15 +163,20 @@ public class GorillaEntity extends SpeciesMob {
 		super.onForaged(); // set the timer without re-broadcasting (no infinite recursion)
 	}
 
-	/** Silverbacks get the "<species>_silverback.png" variant from the texture pipeline. */
+	/**
+	 * Fur colour is a per-individual pick from the species' texture list (stable for the
+	 * life of the entity). The silverback's saddle is NOT a texture swap any more — it is
+	 * a translucent overlay layer, so it composes with whichever fur this gorilla drew.
+	 */
 	@Override
 	public Identifier texture() {
-		Identifier base = super.texture();
-		if (!isSilverback() || !base.getPath().endsWith(".png")) {
-			return base;
+		Species species = species();
+		if (species == null || species.textures().isEmpty()) {
+			return super.texture();
 		}
-		return Identifier.fromNamespaceAndPath(base.getNamespace(),
-				base.getPath().substring(0, base.getPath().length() - 4) + "_silverback.png");
+		List<Identifier> options = species.textures();
+		int pick = Math.floorMod(getUUID().hashCode(), options.size());
+		return options.get(pick);
 	}
 
 	public @Nullable UUID getTroopId() {
@@ -304,7 +326,7 @@ public class GorillaEntity extends SpeciesMob {
 		if (serverBeatTicks > 0 || isOrderedToSit()) {
 			return;
 		}
-		serverBeatTicks = 40;
+		serverBeatTicks = 50; // matches the 2.5s chestPump animation
 		Species species = species();
 		double radius = species != null ? species.specialDouble("intimidate_radius", 6.0) : 6.0;
 		int slownessTicks = species != null ? species.specialInt("intimidate_slowness_ticks", 100) : 100;
@@ -327,24 +349,74 @@ public class GorillaEntity extends SpeciesMob {
 	@Override
 	public void handleEntityEvent(byte id) {
 		if (id == EVENT_CHEST_BEAT) {
-			clientBeatTicks = 40;
+			chestPumpAnimationState.start(tickCount);
 		} else if (id == EVENT_EAT_LEAVES) {
-			clientEatTicks = 30;
+			eatAnimationState.start(tickCount);
+		} else if (id == EVENT_PUNCH) {
+			punchAnimationState.start(tickCount);
+		} else if (id == EVENT_HOOT) {
+			soundAnimationState.start(tickCount);
 		} else {
 			super.handleEntityEvent(id);
 		}
 	}
 
 	@Override
+	public boolean doHurtTarget(ServerLevel level, net.minecraft.world.entity.Entity target) {
+		level.broadcastEntityEvent(this, EVENT_PUNCH);
+		return super.doHurtTarget(level, target);
+	}
+
+	@Override
 	public void tick() {
 		super.tick();
 		if (level().isClientSide()) {
-			if (clientBeatTicks > 0) {
-				clientBeatTicks--;
+			tickAnimations();
+		}
+	}
+
+	/**
+	 * Client-only animation driving. Breathing always loops; the sitting set is a small
+	 * state machine so exactly ONE of start/loop/end is ever running (they are absolute
+	 * poses — overlapping them would double the rotations); wink and sniff are random
+	 * idle flavour.
+	 */
+	private void tickAnimations() {
+		breathingAnimationState.startIfStopped(tickCount);
+
+		boolean sitting = isInSittingPose();
+		if (sitting != lastSittingPose) {
+			lastSittingPose = sitting;
+			sitTransitionTicks = 0;
+			sitStartAnimationState.stop();
+			sitLoopAnimationState.stop();
+			sitEndAnimationState.stop();
+			(sitting ? sitStartAnimationState : sitEndAnimationState).start(tickCount);
+		} else if (sitting) {
+			if (sitTransitionTicks < SIT_TRANSITION_TICKS) {
+				sitTransitionTicks++;
+			} else if (!sitLoopAnimationState.isStarted()) {
+				sitStartAnimationState.stop();
+				sitLoopAnimationState.start(tickCount);
 			}
-			if (clientEatTicks > 0) {
-				clientEatTicks--;
+		}
+
+		if (!sitting && getTarget() == null) {
+			if (getRandom().nextInt(220) == 0) {
+				winkAnimationState.start(tickCount);
 			}
+			if (getRandom().nextInt(420) == 0) {
+				sniffAnimationState.start(tickCount);
+			}
+		}
+	}
+
+	@Override
+	public void playAmbientSound() {
+		super.playAmbientSound();
+		// ambient sounds are chosen server-side; tell clients so the mouth moves with it
+		if (level() instanceof ServerLevel serverLevel) {
+			serverLevel.broadcastEntityEvent(this, EVENT_HOOT);
 		}
 	}
 

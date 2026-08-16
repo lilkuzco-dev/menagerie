@@ -10,6 +10,8 @@
 // reserved / GPL and were used as visual reference only.
 //
 // UV layouts below MUST mirror the Java models in src/client/.../client/model/.
+// NOTE: the gorilla is NOT generated here — it ships imported public-domain art from
+// Animal Garden - Western Gorilla (see CREDITS.md); this script must not touch it.
 // PNG codec ported from vibranium/tools/gen-textures.js (ours).
 "use strict";
 const zlib = require("node:zlib");
@@ -224,32 +226,6 @@ function furShader(palette, rand, baseIdx, noise = 0.9) {
 // ================= animal painters =================
 // Every painter takes (canvas, palette P [5 shades dark->light], rng).
 
-// ---- gorilla: layout head(0,0 8x8x6) muzzle(28,0 4x3x2) body(0,16 12x12x14)
-//               arm(44,0 4x12x4) leg(0,42 4x7x4)
-function paintGorilla(cv, P, rand, { silverback }) {
-	paintBox(cv, 0, 0, 8, 8, 6, furShader(P, rand, 1.2));
-	// face patch: lighter inner front face + eyes
-	fillRect(cv, 6 + 1, 6 + 2, 6, 5, () => shade(P[2], 0.96 + rand() * 0.08));
-	setPx(cv, 6 + 2, 6 + 3, P[0]); setPx(cv, 6 + 5, 6 + 3, P[0]); // eyes
-	setPx(cv, 6 + 2, 6 + 4, P[4]); setPx(cv, 6 + 5, 6 + 4, P[4]); // catchlight
-	paintBox(cv, 28, 0, 4, 3, 2, furShader(P, rand, 2));
-	setPx(cv, 30 + 1, 2 + 1, P[0]); setPx(cv, 30 + 2, 2 + 1, P[0]); // nostrils (muzzle front)
-	paintBox(cv, 0, 16, 12, 12, 14, (face, x, y, fw, fh) => {
-		// silverback saddle: light gray rear half of the back + upper flanks
-		if (silverback) {
-			const rear = face === "top" && y > fh * 0.45;
-			const flank = (face === "left" || face === "right") && y < fh * 0.4 && x > fw * 0.35;
-			const rump = face === "back" && y < fh * 0.5;
-			if (rear || flank || rump) return shade(P[4], 0.9 + rand() * 0.12);
-		}
-		return furShader(P, rand, 1.1)(face, x, y, fw, fh);
-	});
-	// chest: slightly lighter (front face of body center)
-	fillRect(cv, 14 + 3, 30 + 2, 6, 6, () => shade(P[2], 0.92 + rand() * 0.1));
-	paintBox(cv, 44, 0, 4, 12, 4, furShader(P, rand, 0.9));
-	paintBox(cv, 0, 42, 4, 7, 4, furShader(P, rand, 0.9));
-}
-
 // ---- crocodile: body(0,0 8x4x16) head(0,20 6x2x9) jaw(30,20 6x2x9)
 //                 tail(0,31 6x3x10) tail2(32,31 4x2x8) leg(0,44 3x4x3)
 function paintCroc(cv, P, rand) {
@@ -460,7 +436,6 @@ const polar = decodePng(readFromJar(jar, "assets/minecraft/textures/entity/bear/
 // palettes (each: 5 shades dark -> light)
 const grayFur = samplePalette({ px: Buffer.concat([wolf.px, panda.px]) }, (c) => sat(c) < 0.25);
 const gorillaP = normalizeLum(grayFur, [32, 58, 88, 125, 195]); // charcoal -> silver
-const mountainP = normalizeLum(grayFur, [24, 46, 70, 102, 175]); // darker, denser coat
 const crocGreens = samplePalette(turtle, (c) => sat(c) > 0.15 && c[1] >= c[0] && c[1] >= c[2]);
 const saltGreens = crocGreens.map((c) => shade([c[0] * 1.05, c[1] * 0.92, c[2] * 1.0], 0.8)); // murkier, darker
 const shellP = samplePalette(turtle, (c) => sat(c) > 0.1).map((c) => shade([c[0] * 1.25, c[1] * 1.05, c[2] * 0.7], 0.85)); // browner shell
@@ -508,10 +483,6 @@ const viperBlotch = shade(viperP[0], 0.6);
 const pythonBlotch = shade(pythonP[0], 0.6);
 
 const jobs = [
-	["textures/entity/gorilla/lowland.png", (cv, r) => paintGorilla(cv, gorillaP, r, { silverback: false })],
-	["textures/entity/gorilla/lowland_silverback.png", (cv, r) => paintGorilla(cv, gorillaP, r, { silverback: true })],
-	["textures/entity/gorilla/mountain.png", (cv, r) => paintGorilla(cv, mountainP, r, { silverback: false })],
-	["textures/entity/gorilla/mountain_silverback.png", (cv, r) => paintGorilla(cv, mountainP, r, { silverback: true })],
 	["textures/entity/crocodile/nile.png", (cv, r) => paintCroc(cv, crocGreens, r)],
 	["textures/entity/crocodile/saltwater.png", (cv, r) => paintCroc(cv, saltGreens, r)],
 	["textures/entity/tortoise/savanna.png", (cv, r) => paintTortoise(cv, shellP, r, skinP)],
@@ -580,7 +551,7 @@ console.log("wrote textures/item/field_guide.png");
 // guide entry icons: face crops from OUR species textures (regions follow each
 // model's UV map) + silhouette variants — the "no new art" discovery presentation
 const ICON_REGIONS = {
-	gorilla: [6, 6, 8, 8],       // head front
+	gorilla: [8, 43, 8, 9],      // head front (128x128 imported skin)
 	crocodile: [9, 20, 6, 9],    // snout from above
 	tortoise: [12, 0, 10, 12],   // shell from above
 	leopard: [5, 26, 6, 5],      // head front

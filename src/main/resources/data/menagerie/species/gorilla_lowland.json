@@ -1,5 +1,5 @@
 {
-	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance). Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required.",
+	"_tuning_notes": "Lowland gorilla, the flagship. weight ~pig-tier for jungles; troops 3-6 with exactly one silverback (assigned in code, first adult of the group). chest_beat_cooldown_* is the silverback idle display window in ticks (30-90s); intimidate_* is the slowness-on-hostiles burst; foliage_tearing also needs mobGriefing on. tame_item: no bananas in vanilla, melon is our banana (1-in-3 per feed, hardcoded chance). Phase 3: forage block = melon/berry raids (mobGriefing-gated); a fed troop is 'content' for content_minutes: taming chance doubles (2/3), chest-beat cooldown doubles, roaming calms. cage_tier 2 = reinforced cage required. Phase 3.1: fur is a per-individual pick from the 'textures' list (stable per entity); the silverback saddle is a translucent overlay layer, so it composes with every fur colour instead of needing a silverback copy of each.",
 	"entity": "menagerie:gorilla",
 	"species": "lowland",
 	"biomes": [
@@ -16,7 +16,7 @@
 	"speed": 0.3,
 	"tame_item": "minecraft:melon_slice",
 	"neutral": true,
-	"texture": "menagerie:textures/entity/gorilla/lowland.png",
+	"texture": "menagerie:textures/entity/gorilla/default.png",
 	"special": {
 		"chest_beat_cooldown_min": 600,
 		"chest_beat_cooldown_max": 1800,
@@ -35,5 +35,10 @@
 		"range": 12,
 		"cooldown_ticks": 1200,
 		"content_minutes": 5
-	}
+	},
+	"textures": [
+		"menagerie:textures/entity/gorilla/default.png",
+		"menagerie:textures/entity/gorilla/brown.png",
+		"menagerie:textures/entity/gorilla/darker.png"
+	]
 }

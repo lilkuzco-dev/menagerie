@@ -2,10 +2,25 @@
 	"entity.gorilla.ambient": {
 		"sounds": [
 			{
-				"name": "minecraft:entity.panda.ambient",
-				"type": "event",
-				"pitch": 0.55,
-				"volume": 1.2
+				"name": "menagerie:gorilla/idle1"
+			},
+			{
+				"name": "menagerie:gorilla/idle2"
+			},
+			{
+				"name": "menagerie:gorilla/idle3"
+			},
+			{
+				"name": "menagerie:gorilla/idle4"
+			},
+			{
+				"name": "menagerie:gorilla/idle5"
+			},
+			{
+				"name": "menagerie:gorilla/idle6"
+			},
+			{
+				"name": "menagerie:gorilla/idle7"
 			}
 		],
 		"subtitle": "subtitles.menagerie.gorilla_ambient"
@@ -35,10 +50,8 @@
 	"entity.gorilla.chest_beat": {
 		"sounds": [
 			{
-				"name": "minecraft:entity.ravager.roar",
-				"type": "event",
-				"pitch": 1.35,
-				"volume": 1.4
+				"name": "menagerie:gorilla/chestpump",
+				"volume": 1.3
 			}
 		],
 		"subtitle": "subtitles.menagerie.gorilla_chest_beat"

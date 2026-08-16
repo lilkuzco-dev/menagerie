@@ -5,6 +5,7 @@ Mobs: a flagship gorilla with real troop life plus a growing roster, all built o
 **data-driven species registry** — adding a new species of an existing animal is one
 JSON file, zero Java.
 
+![gorilla](docs/gorilla.png)
 ![roster](docs/lineup.png)
 ![phase 2 roster](docs/lineup_phase2.png)
 ![field guide](docs/field_guide.png)
@@ -114,6 +115,21 @@ JDK 25. `./gradlew build` → `build/libs/menagerie-<version>.jar`. Dev client:
 `build/run-gametest/screenshots/`).
 
 ## Changelog
+
+### 0.3.1 (2026-08-15)
+- **New gorilla visuals.** Model, animations, fur textures and voice replaced with the
+  public-domain art from *Animal Garden - Western Gorilla* by aquarius_playz (The
+  Unlicense — see `CREDITS.md`), ported from Forge 1.20.1 to Fabric 26.2.
+  26 parts with an articulated face on a 128×128 skin, 28 keyframe animations
+  (knuckle-walk, breathing, chest-pump, eat, sit in/loop/out, punch, wink, sniff).
+- Fur is now a per-individual pick from a new optional `textures` list in the species
+  JSON: lowland draws default/brown/darker, mountain draws black/brown_back.
+- The silverback saddle is a translucent overlay layer instead of a texture swap, so
+  one saddle skin composes with every fur colour. Scale and stats unchanged.
+- Real audio: `entity.gorilla.ambient` plays seven recorded idle calls and
+  `entity.gorilla.chest_beat` plays the recorded chest-pump (the pitch-shifted vanilla
+  stand-ins for those two are gone).
+- Troops hold together: adults now trail their silverback (`FollowSilverbackGoal`).
 
 ### 0.3.0 (2026-08-15)
 - Cage Traps (two tiers) with full-fidelity capture/transport/release; `cage_tier`

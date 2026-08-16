@@ -47,7 +47,10 @@ public final class MenagerieCommands {
 		Map<String, Integer> counts = new TreeMap<>();
 		for (SpeciesMob mob : level.getEntitiesOfClass(SpeciesMob.class, box)) {
 			Species species = mob.species();
+			String texturePath = mob.texture().getPath();
+			String fur = texturePath.substring(texturePath.lastIndexOf('/') + 1).replace(".png", "");
 			String key = mob.entityId() + "|" + (species == null ? "?" : species.name())
+					+ (mob instanceof GorillaEntity ? "|fur=" + fur : "")
 					+ (mob instanceof GorillaEntity gorilla && gorilla.isSilverback() ? "|silverback" : "")
 					+ (mob instanceof dev.lilkuzco.menagerie.entity.TortoiseEntity tortoise && tortoise.isShelled() ? "|shelled" : "")
 					+ (mob instanceof dev.lilkuzco.menagerie.entity.GrizzlyEntity bear && bear.isBearSleeping() ? "|sleeping" : "")

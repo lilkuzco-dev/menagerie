@@ -80,3 +80,28 @@ RCON; client gametest for screen rendering). Census gained the `|content` marker
 ## Notes
 - The fake player was killed twice more this battery (hippo, python) — Menagerie
   remains the leading cause of death for Steve across all three phases.
+
+---
+
+# Menagerie 0.3.1 — Gorilla Visual Replacement
+
+Date: 2026-08-15. Client checks via `./gradlew runGametest` screenshots; behaviour via
+the usual dev server (port 25567) + carpet fake player over RCON. Census gained a
+`|fur=<name>` marker so texture variants are provable, not just eyeballed.
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | License cleared before import | **PASS** — the jar's own `UNLICENSE` (full public-domain dedication) and `license="Unlicense"` in `META-INF/mods.toml` were read directly. Recorded in `RESEARCH.md`; `CREDITS.md` credits aquarius_playz. |
+| 2 | Model + animations port | **PASS** — 26 parts bake cleanly and all 20 animated bone names resolve (`KeyframeAnimation.bake` throws otherwise, so this is enforced, not assumed). Every SRG name was resolved against an independent remap table before conversion; the naive frequency heuristic would have swapped LINEAR/CATMULLROM. |
+| 3 | Renders in the client camera | **PASS** — `docs/gorilla.png`: six gorillas with the articulated face (eyes, brow, muzzle, ears) in the knuckle-walk stance. No invisible-entity or missing-texture regression; zero unknown-sound warnings in the client log. |
+| 4 | Fur variants | **PASS** — census logged `fur=default`, `fur=brown` and `fur=darker` across one spawn batch, so all three lowland variants are assigned and rendered. **Caveat (upstream art, not the port):** `brown` differs from `default` by at most 7/255 on any channel and `darker` by 15 — they are subtle tints, near-indistinguishable in play. `black` (max delta 44) and `brown_back` (localised back patch) are clearly distinct. |
+| 5 | Silverback overlay | **PASS** — `docs/gorilla_silverback.png`, a pinned A/B with species and flag set explicitly by NBT: the plain adult's back is uniformly black, the silverback's carries the light saddle. A separate control (two non-silverbacks from behind) shows no saddle on either. Note for future batteries: a plain `/summon` makes each gorilla the silverback of its own new troop, which is why an unpinned pair shows two saddles. |
+| 6 | Chest-beat | **PASS** — a hostile inside the detect radius made the silverback rear up (visible in `gorilla_chest_beat_b`) and applied Slowness to the zombie, which is the same code path that plays `chestpump.ogg` and broadcasts the animation event. Beat duration extended 40→50 ticks to match the 2.5s animation. |
+| 7 | Troop cohesion (`FollowSilverbackGoal`) | **PASS** — three followers sharing a troop id with one silverback closed from 12.0 blocks to 1.6/1.8/1.9 blocks within 15s and then held station. |
+| 8 | Build + regression | **PASS** — clean `./gradlew build`; the other seven animals are untouched (their generated textures regenerate byte-identically; `tools/gen-textures.js` no longer paints the gorilla and says so). |
+
+## Notes
+- `NoAI` skips `customServerAiStep` entirely, so behaviour tests (chest-beat, troop
+  logic) need live-AI mobs; only pose/framing shots should pin with `NoAI`.
+- Gorilla `hurt`/`death`/`eat` remain pitch-shifted vanilla events: the source jar
+  ships no recordings for them, and silence would be worse than a stand-in.

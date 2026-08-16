@@ -65,13 +65,7 @@ public class MenagerieClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(SNAKE, SnakeModel::createBodyLayer);
 		ModelLayerRegistry.registerModelLayer(SNAKE_BABY, () -> SnakeModel.createBodyLayer().apply(BABY));
 
-		EntityRendererRegistry.register(MenagerieEntities.GORILLA, context -> new SpeciesRenderer<>(context,
-				new GorillaModel(context.bakeLayer(GORILLA)), new GorillaModel(context.bakeLayer(GORILLA_BABY)),
-				0.7F, (entity, state) -> {
-					state.silverback = entity.isSilverback();
-					state.beatTicks = entity.clientBeatTicks;
-					state.eatTicks = entity.clientEatTicks;
-				}));
+		EntityRendererRegistry.register(MenagerieEntities.GORILLA, GorillaRenderer::new);
 		EntityRendererRegistry.register(MenagerieEntities.CROCODILE, context -> new SpeciesRenderer<>(context,
 				new CrocodileModel(context.bakeLayer(CROCODILE)), new CrocodileModel(context.bakeLayer(CROCODILE_BABY)),
 				0.8F, (entity, state) -> state.lungeTicks = entity.clientLungeTicks));
