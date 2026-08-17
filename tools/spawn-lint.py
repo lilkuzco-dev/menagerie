@@ -23,7 +23,7 @@ Fatal rules
   S8  exclude_biomes entries are well-formed and actually narrow something
   S9  baby_scale stays inside vanilla's baby-mesh range
   S10 the rarity ladder stays monotonic (no "common" rarer than "uncommon")
-  S11 RarityConfig.java's DEFAULTS equal rarity.json tier-for-tier — that table is
+  S12 RarityConfig.java's DEFAULTS equal rarity.json tier-for-tier — that table is
       the fallback used when rarity.json does not resolve, so a drift silently
       ships a different density than the datapack declares
 
@@ -177,7 +177,7 @@ def resolve(entry, tags, seen=None):
 
 
 def check_rarity_defaults(lint, tiers):
-    """S11: RarityConfig.java's DEFAULTS must equal rarity.json, tier for tier."""
+    """S12: RarityConfig.java's DEFAULTS must equal rarity.json, tier for tier."""
     src = open(RARITY_JAVA).read()
     # public static final Tier RARE = new Tier(5, 1, 2, 4, 1.0F);
     pat = re.compile(r"public\s+static\s+final\s+Tier\s+(\w+)\s*=\s*new\s+Tier\(\s*"
@@ -191,14 +191,14 @@ def check_rarity_defaults(lint, tiers):
     for name, spec in sorted(tiers.items()):
         java = found.get(name)
         if java is None:
-            lint.fail("S11", f"rarity.json defines tier '{name}' but RarityConfig.java has "
+            lint.fail("S12", f"rarity.json defines tier '{name}' but RarityConfig.java has "
                              f"no matching Tier constant — the fallback cannot honour it")
             continue
         want = (spec["weight"], spec["group_min"], spec["group_max"],
                 spec["nearby_cap"], float(spec["attempt_chance"]))
         for field, j, w in zip(FIELDS, java, want):
             if j != w:
-                lint.fail("S11", f"rarity tier '{name}': RarityConfig.java {field}={j} but "
+                lint.fail("S12", f"rarity tier '{name}': RarityConfig.java {field}={j} but "
                                  f"rarity.json says {w} — the Java fallback would silently "
                                  f"ship different density if rarity.json fails to resolve")
 
@@ -228,7 +228,7 @@ def main():
     lint.anchor(len(known) == len(LADDER),
                 f"rarity ladder covers all {len(LADDER)} named tiers ({len(known)} found)")
 
-    # S11 — RarityConfig.java's DEFAULTS are the table SpeciesRegistry falls back to when
+    # S12 — RarityConfig.java's DEFAULTS are the table SpeciesRegistry falls back to when
     # rarity.json does not resolve. A drift between the two is invisible at runtime: the
     # world just gets emptier, with no error and no log line. This is exactly how the
     # 0.4.5 density fix stayed un-landed in the fallback for three releases while the

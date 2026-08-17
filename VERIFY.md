@@ -59,7 +59,7 @@ present in every jar since. But `RarityConfig.java`'s `DEFAULTS` — the table
 `SpeciesRegistry` falls back to when `rarity.json` does not resolve — still held the
 pre-0.4.5 values, and **no gate checked it**. A datapack override or an unreadable file
 would have silently reverted the whole ladder to panda-class: no error, no log line,
-just an emptier world. Aligned, and now gated by **spawn-lint S11**, negative-tested
+just an emptier world. Aligned, and now gated by **spawn-lint S12**, negative-tested
 (reverting `RARE` to 2 fails the build naming both values).
 
 Live behaviour is unchanged — `rarity.json` resolves and wins. 0.4.8 removes the trap,
