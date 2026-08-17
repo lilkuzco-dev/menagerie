@@ -1,3 +1,72 @@
+# Menagerie 0.4.8 — Skin roll-range proved from the jar; density fallback aligned
+
+Date: 2026-08-17. Gate before the world reset. Two questions, both answered from the
+**built artifact** rather than the source tree.
+
+## 1. The per-species roll-range table — 16/16 PASS
+
+The hippo checkerboard was fixed by eye, never by proof. It is now proved by count.
+Run against the released `menagerie-0.4.7.jar` (sha512 `6e8f922b…a2d0`, the exact bytes
+in `mods.json`) and again against 0.4.8, with species JSON **and** textures both read
+out of the jar:
+
+| species | roll ceiling | textures in jar | verdict |
+|---|---|---|---|
+| crocodile_nile | 1 | 1 | PASS |
+| crocodile_saltwater | 1 | 1 | PASS |
+| gorilla_lowland | 4 | 4 | PASS |
+| gorilla_mountain | 3 | 3 | PASS |
+| grizzly_black | 1 | 1 | PASS |
+| grizzly_taiga | 1 | 1 | PASS |
+| hippo_river | 1 | 1 | PASS |
+| hippo_swamp | 1 | 1 | PASS |
+| leopard_jungle | 1 | 1 | PASS |
+| leopard_snow | 1 | 1 | PASS |
+| lion_barbary | 7 | 7 | PASS |
+| lion_savanna | 8 | 8 | PASS |
+| snake_python | 1 | 1 | PASS |
+| snake_viper | 1 | 1 | PASS |
+| tortoise_savanna | 1 | 1 | PASS |
+| vulture_griffon | 1 | 1 | PASS |
+
+34 rollable skins across 16 species, 0 unresolvable, 0 orphans. The reverse direction is
+clean too: the 9 textures no species rolls (`gorilla/silverback.png`, `lion/eye/*` ×8)
+are overlay layers requested from Java, and asset-audit accounts for them.
+
+**The "skins: 30 vs 3" figure was never Menagerie's.** It is Untamed Wilds' `hippo.json`
+(`AUDIT.md` sweep 3). Menagerie stores no skin *count* — a species enumerates explicit
+paths, so the roll range **is** the list. Menagerie's own instance of the defect class
+was the lion (13 of 15 coats unreachable), fixed in 0.4.4 and PASS here.
+
+## 2. The gap that made the table only half-proof — CLOSED
+
+`asset-audit` read declared skins from `src/` while checking textures against the jar,
+so it could only ever prove the source tree agreed with the jar's assets, never that the
+jar agreed with itself. Both sides now come from the artifact.
+
+Negative-tested:
+
+| tamper | expected | result |
+|---|---|---|
+| drop `hippo_river.json` from the jar only | anchor fails, names it | exit 1, `MISSING FROM JAR: ['hippo_river']` |
+| jar-only hippo declaring 2 textures it does not ship | class (a) fails | exit 1, table shows `3 → 1 FAIL` |
+| same tampered jar, **pre-change** audit | (demonstrates the gap) | **exit 0, `hippo_river … PASS`** |
+
+## 3. Density fallback — the fix was in the data but not in the Java
+
+The 0.4.5 ladder (`uncommon 4→10`, `rare 2→5`) shipped correctly in `rarity.json` and is
+present in every jar since. But `RarityConfig.java`'s `DEFAULTS` — the table
+`SpeciesRegistry` falls back to when `rarity.json` does not resolve — still held the
+pre-0.4.5 values, and **no gate checked it**. A datapack override or an unreadable file
+would have silently reverted the whole ladder to panda-class: no error, no log line,
+just an emptier world. Aligned, and now gated by **spawn-lint S11**, negative-tested
+(reverting `RARE` to 2 fails the build naming both values).
+
+Live behaviour is unchanged — `rarity.json` resolves and wins. 0.4.8 removes the trap,
+not the numbers.
+
+---
+
 # Menagerie 0.4.2 — Reliability audit + full sweep
 
 Date: 2026-08-16. Target: Minecraft 26.2, Fabric Loader 0.19.3,

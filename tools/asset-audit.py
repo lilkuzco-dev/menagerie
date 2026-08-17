@@ -12,8 +12,14 @@ Three failure classes, all fatal:
   (b) shipped-but-unreachable — dead weight, or the tell of broken wiring
   (c) index-scheme mismatch   — 0- vs 1-indexed numbered families, gaps in a run
 
+With --jar, BOTH sides come from the artifact: species definitions are read out of the
+jar, not out of src/. Reading declarations from the source tree while checking assets
+against the jar can only prove src/ agrees with the jar — never that the jar agrees with
+itself — and a species that fails to be packaged would pass the audit while shipping an
+animal with no definition and no reachable skin.
+
 Sources of REQUESTS:
-  * species JSON            texture, textures[], variant_rolls.*.texture
+  * species JSON            texture, textures[], variant_rolls.*.texture  (read FROM THE JAR)
   * field guide             textures/gui/guide/<entity>_<species>[_silhouette].png
   * Java literals           any "...png" string in src/**.java
   * Java prefix families    "..._" fragments that get an index appended (declared below)
@@ -227,6 +233,36 @@ def species_files():
     return sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith(".json"))
 
 
+def read_species(jar_path):
+    """
+    Load every species definition, preferring the JAR over the source tree.
+
+    Both halves of the roll-range comparison must come from the same artifact. Reading
+    the DECLARED skins from src/ while checking the SHIPPED textures against the jar is
+    the exact shape of the bug this audit exists to catch: it can only ever prove that
+    the source tree agrees with the jar's assets, not that the jar agrees with itself.
+    A species file that fails to be packaged, or is filtered/overwritten on its way into
+    the jar, is invisible to a src/-side read and would pass a build it should fail.
+
+    Yields (name, entity, species, doc). Falls back to the source tree only when no jar
+    is given (the --jar-less "audit the working tree" mode).
+    """
+    out = []
+    if jar_path:
+        with zipfile.ZipFile(jar_path) as z:
+            members = sorted(n for n in z.namelist()
+                             if re.fullmatch(rf"data/{NS}/species/[^/]+\.json", n))
+            for n in members:
+                doc = json.loads(z.read(n))
+                out.append((os.path.basename(n)[:-5], doc))
+    else:
+        for path in species_files():
+            with open(path) as fh:
+                out.append((os.path.basename(path)[:-5], json.load(fh)))
+    return [(name, doc["entity"].split(":")[-1], doc.get("species", name), doc)
+            for name, doc in out]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--jar")
@@ -251,15 +287,8 @@ def main():
           + (f", vanilla assets from {os.path.basename(args.vanilla_jar)}" if vanilla else ""))
 
     # ---- 1. species JSON -----------------------------------------------------
-    species = []
-    for path in species_files():
-        with open(path) as fh:
-            doc = json.load(fh)
-        name = os.path.basename(path)[:-5]
-        entity = doc["entity"].split(":")[-1]
-        sp = doc.get("species", name)
-        species.append((name, entity, sp, doc))
-
+    species = read_species(args.jar)
+    for name, entity, sp, doc in species:
         a.request(doc["texture"], f"{name}.texture")
         for i, t in enumerate(doc.get("textures", [])):
             a.request(t, f"{name}.textures[{i}]")
@@ -271,7 +300,20 @@ def main():
         a.request(f"{NS}:{base}.png", f"guide icon ({name}, discovered)")
         a.request(f"{NS}:{base}_silhouette.png", f"guide icon ({name}, undiscovered)")
 
-    a.anchor(len(species) >= 16, f"found {len(species)} species files (expected >= 16)")
+    a.anchor(len(species) >= 16, f"found {len(species)} species files (expected >= 16)"
+             + (" IN THE JAR" if args.jar else " in src/ (no --jar given)"))
+    # Every species the source tree declares must actually be IN the jar. Without this,
+    # a species file that never gets packaged simply vanishes from the audit's input and
+    # the build passes vacuously — the animal ships with no definition and every one of
+    # its skins is unreachable at runtime. Compares names, so it also catches a rename
+    # that lands in src/ but not in the artifact.
+    if args.jar:
+        in_src = {os.path.basename(p)[:-5] for p in species_files()}
+        in_jar = {name for name, _, _, _ in species}
+        a.anchor(in_src == in_jar,
+                 f"species in src/ ({len(in_src)}) all present in jar ({len(in_jar)})"
+                 + (f" — MISSING FROM JAR: {sorted(in_src - in_jar)}" if in_src - in_jar else "")
+                 + (f" — JAR-ONLY: {sorted(in_jar - in_src)}" if in_jar - in_src else ""))
     a.anchor(any(d.get("variant_rolls") for _, _, _, d in species),
              "at least one species declares variant_rolls")
     a.anchor(any(d.get("textures") for _, _, _, d in species),

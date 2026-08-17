@@ -21,6 +21,11 @@ Fatal rules
   S7  every texture the species names lives under textures/entity/<its own entity>/
       — a static guard against a texture rendering on the wrong animal's model
   S8  exclude_biomes entries are well-formed and actually narrow something
+  S9  baby_scale stays inside vanilla's baby-mesh range
+  S10 the rarity ladder stays monotonic (no "common" rarer than "uncommon")
+  S11 RarityConfig.java's DEFAULTS equal rarity.json tier-for-tier — that table is
+      the fallback used when rarity.json does not resolve, so a drift silently
+      ships a different density than the datapack declares
 
 Advisory (printed, non-fatal)
   A1  raw biome ids where a tag exists: Terralith's ~85 biomes join the vanilla
@@ -46,6 +51,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "src", "main", "resources")
 SPECIES_DIR = os.path.join(RES, "data", "menagerie", "species")
 RARITY = os.path.join(RES, "data", "menagerie", "menagerie_config", "rarity.json")
+RARITY_JAVA = os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco",
+                           "menagerie", "data", "RarityConfig.java")
 ENTITIES_JAVA = os.path.join(ROOT, "src", "main", "java", "dev", "lilkuzco",
                              "menagerie", "entity", "MenagerieEntities.java")
 
@@ -169,6 +176,33 @@ def resolve(entry, tags, seen=None):
     return out
 
 
+def check_rarity_defaults(lint, tiers):
+    """S11: RarityConfig.java's DEFAULTS must equal rarity.json, tier for tier."""
+    src = open(RARITY_JAVA).read()
+    # public static final Tier RARE = new Tier(5, 1, 2, 4, 1.0F);
+    pat = re.compile(r"public\s+static\s+final\s+Tier\s+(\w+)\s*=\s*new\s+Tier\(\s*"
+                     r"(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)F?\s*\)")
+    found = {m.group(1).lower(): (int(m.group(2)), int(m.group(3)), int(m.group(4)),
+                                  int(m.group(5)), float(m.group(6)))
+             for m in pat.finditer(src)}
+    lint.anchor(len(found) >= 5,
+                f"parsed {len(found)} Tier constants from RarityConfig.java (expected >= 5)")
+    FIELDS = ["weight", "group_min", "group_max", "nearby_cap", "attempt_chance"]
+    for name, spec in sorted(tiers.items()):
+        java = found.get(name)
+        if java is None:
+            lint.fail("S11", f"rarity.json defines tier '{name}' but RarityConfig.java has "
+                             f"no matching Tier constant — the fallback cannot honour it")
+            continue
+        want = (spec["weight"], spec["group_min"], spec["group_max"],
+                spec["nearby_cap"], float(spec["attempt_chance"]))
+        for field, j, w in zip(FIELDS, java, want):
+            if j != w:
+                lint.fail("S11", f"rarity tier '{name}': RarityConfig.java {field}={j} but "
+                                 f"rarity.json says {w} — the Java fallback would silently "
+                                 f"ship different density if rarity.json fails to resolve")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--resolve", nargs="*", default=None,
@@ -193,6 +227,13 @@ def main():
                              f"{b_name} weight {bw} — a commoner tier must never be rarer")
     lint.anchor(len(known) == len(LADDER),
                 f"rarity ladder covers all {len(LADDER)} named tiers ({len(known)} found)")
+
+    # S11 — RarityConfig.java's DEFAULTS are the table SpeciesRegistry falls back to when
+    # rarity.json does not resolve. A drift between the two is invisible at runtime: the
+    # world just gets emptier, with no error and no log line. This is exactly how the
+    # 0.4.5 density fix stayed un-landed in the fallback for three releases while the
+    # datapack said 5/10 and the Java still said 2/4.
+    check_rarity_defaults(lint, tiers)
     lint.anchor(bool(water),
                 f"MenagerieEntities scan found waterline placements: {sorted(water) or 'NONE'}")
     lint.anchor("SpawnPlacements.register" in entities_src,

@@ -32,11 +32,17 @@ public final class RarityConfig {
 	public record Tier(int weight, int groupMin, int groupMax, int nearbyCap, float attemptChance) {
 	}
 
-	public static final Tier UBIQUITOUS = new Tier(12, 2, 4, 12, 1.0F);
-	public static final Tier COMMON = new Tier(8, 1, 3, 10, 1.0F);
-	public static final Tier UNCOMMON = new Tier(4, 1, 3, 6, 1.0F);
-	public static final Tier RARE = new Tier(2, 1, 2, 4, 1.0F);
-	public static final Tier EPIC = new Tier(1, 1, 2, 3, 0.35F);
+	// These MUST stay equal to data/menagerie/menagerie_config/rarity.json — spawn-lint
+	// S11 fails the build if they drift. They are not merely "the same numbers twice":
+	// this table is what SpeciesRegistry falls back to when rarity.json does not resolve
+	// (absent, unreadable, or overridden away by a datapack). Left at the pre-0.4.5
+	// values, that fallback silently reverted the whole ladder to panda-class density —
+	// no error, no log line, just an emptier world, which is the hardest failure to see.
+	public static final Tier UBIQUITOUS = new Tier(30, 2, 4, 12, 1.0F);
+	public static final Tier COMMON = new Tier(20, 1, 3, 10, 1.0F);
+	public static final Tier UNCOMMON = new Tier(10, 1, 3, 6, 1.0F);
+	public static final Tier RARE = new Tier(5, 1, 2, 4, 1.0F);
+	public static final Tier EPIC = new Tier(2, 1, 2, 3, 0.35F);
 
 	private static final Map<String, Tier> DEFAULTS = Map.of(
 			"ubiquitous", UBIQUITOUS,
