@@ -97,7 +97,6 @@ built for the headless test battery in `VERIFY.md`.
   fully live.
 - The vulture is the last hand-made animal — no public-domain source has been found for
   it, so its art is unchanged.
-- No spawn eggs yet; use `/summon` (plain summon picks the biome-correct species).
 - No loot tables yet — the roster drops nothing by design in Phase 1.
 - `/summon` with extra NBT skips species finalization (vanilla behavior); plain
   `/summon` does the right thing.
